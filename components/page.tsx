@@ -11,9 +11,13 @@ const Page = ({ title, children }: Props) => (
 	<>
 		{title ? (
 			<Head>
-				<title>Rice Bowl | {title}</title>
+				<title>Ponto | {title}</title>
 			</Head>
-		) : null}
+		) : (
+			<Head>
+				<title>Ponto</title>
+			</Head>
+		)}
 
 		<Appbar />
 

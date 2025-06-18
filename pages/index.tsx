@@ -1,36 +1,51 @@
 import Page from '@/components/page'
 import Section from '@/components/section'
+import AuthGuard from '@/components/auth-guard'
+import { useAuth } from '@/lib/auth'
 
-const Index = () => (
-	<Page>
-		<Section>
-			<h2 className='text-xl font-semibold text-foreground'>
-				We grow a lot of rice.
-			</h2>
+const Index = () => {
+	const { user } = useAuth()
+	
+	return (
+		<AuthGuard>
+			<Page>
+				<Section>
+					<h2 className='text-xl font-semibold text-foreground'>
+						Bem-vindo ao Sistema de Ponto, {user?.name}!
+					</h2>
 
-			<div className='mt-2'>
-				<p className='text-muted-foreground'>
-					You love rice, and so does the rest of the world. In the crop year
-					2008/2009, the milled rice production volume amounted to over{' '}
-					<span className='font-medium text-foreground'>
-						448 million tons
-					</span>{' '}
-					worldwide.
-				</p>
+					<div className='mt-2'>
+						<p className='text-muted-foreground'>
+							Este é seu painel principal para gerenciar registros de ponto e 
+							acompanhar suas horas trabalhadas.
+						</p>
 
-				<br />
+						<br />
 
-				<p className='text-sm text-muted-foreground'>
-					<a
-						href='https://github.com/mvllow/next-pwa-template'
-						className='underline hover:text-foreground transition-colors'
-					>
-						Source
-					</a>
-				</p>
-			</div>
-		</Section>
-	</Page>
-)
+						<div className='grid gap-4 md:grid-cols-2'>
+							<div className='p-4 border rounded-lg'>
+								<h3 className='font-medium text-foreground mb-2'>
+									Registrar Ponto
+								</h3>
+								<p className='text-sm text-muted-foreground'>
+									Registre sua entrada, saída ou intervalo.
+								</p>
+							</div>
+							
+							<div className='p-4 border rounded-lg'>
+								<h3 className='font-medium text-foreground mb-2'>
+									Relatórios
+								</h3>
+								<p className='text-sm text-muted-foreground'>
+									Visualize seus relatórios de horas trabalhadas.
+								</p>
+							</div>
+						</div>
+					</div>
+				</Section>
+			</Page>
+		</AuthGuard>
+	)
+}
 
 export default Index
