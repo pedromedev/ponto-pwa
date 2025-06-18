@@ -12,10 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { LogOut, User } from 'lucide-react'
 
-const links = [
-	{ label: 'Story', href: '/story' },
-	{ label: 'Recipes', href: '/recipes' },
-]
+const links: { label: string; href: string }[] = []
 
 const Appbar = () => {
 	const router = useRouter()
