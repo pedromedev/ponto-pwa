@@ -2,10 +2,12 @@ import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { TimeField, FieldName, FIELD_LABELS } from '@/types/time-entry'
+import { Loader2 } from 'lucide-react'
 
 interface TimeFieldComponentProps {
   fieldName: FieldName
   field: TimeField
+  isSubmitting: boolean
   onFieldClick: (fieldName: FieldName) => void
   onJustifyClick: (fieldName: FieldName) => void
   onJustificationSubmit: (fieldName: FieldName) => void
@@ -16,6 +18,7 @@ interface TimeFieldComponentProps {
 export const TimeFieldComponent: React.FC<TimeFieldComponentProps> = ({
   fieldName,
   field,
+  isSubmitting,
   onFieldClick,
   onJustifyClick,
   onJustificationSubmit,
@@ -36,15 +39,30 @@ export const TimeFieldComponent: React.FC<TimeFieldComponentProps> = ({
           value={field.value || ''}
           placeholder="--:--"
           readOnly
-          onClick={() => onFieldClick(fieldName)}
+          onClick={() => {
+            if (!isSubmitting) {
+              onFieldClick(fieldName)
+            }
+          }}
           className={`cursor-pointer transition-all duration-200 ${
             field.isJustified 
-              ? 'border-green-500 bg-green-50 dark:bg-green-950/20 cursor-not-allowed' 
-              : 'hover:border-primary'
+              ? 'border-green-500 bg-green-50 dark:bg-green-950/20' 
+              : isSubmitting
+              ? 'cursor-wait opacity-50'
+              : 'hover:border-primary cursor-pointer'
           } ${field.value ? 'text-foreground' : 'text-muted-foreground'}`}
+          disabled={isSubmitting}
         />
         
-        {field.value && !field.isJustified && (
+        {/* Indicador de carregamento */}
+        {isSubmitting && (
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 text-primary">
+            <Loader2 className="h-4 w-4 animate-spin" />
+          </div>
+        )}
+        
+        {/* Botão de justificar */}
+        {field.value && !field.isJustified && !isSubmitting && (
           <Button
             type="button"
             size="sm"
@@ -56,13 +74,16 @@ export const TimeFieldComponent: React.FC<TimeFieldComponentProps> = ({
           </Button>
         )}
         
+        {/* Indicador de justificado */}
         {field.isJustified && (
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 text-green-600 text-xs font-medium">
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 text-green-600 text-xs font-medium flex items-center gap-1">
+            <span className="text-green-500">✓</span>
             Justificado
           </div>
         )}
       </div>
 
+      {/* Formulário de justificativa */}
       {field.showJustificationForm && (
         <div className="space-y-3 p-4 border rounded-lg bg-muted/50 animate-in slide-in-from-top-2 duration-300">
           <label className="text-sm font-medium text-foreground">
@@ -73,6 +94,7 @@ export const TimeFieldComponent: React.FC<TimeFieldComponentProps> = ({
             onChange={(e) => onJustificationChange(fieldName, e.target.value)}
             placeholder="Digite sua justificativa..."
             className="w-full min-h-[80px] px-3 py-2 border border-input rounded-md resize-none focus:outline-none focus:ring-1 focus:ring-ring bg-background"
+            disabled={isSubmitting}
           />
           <div className="flex gap-2 justify-end">
             <Button
@@ -80,6 +102,7 @@ export const TimeFieldComponent: React.FC<TimeFieldComponentProps> = ({
               size="sm"
               variant="outline"
               onClick={() => onJustificationCancel(fieldName)}
+              disabled={isSubmitting}
             >
               Cancelar
             </Button>
@@ -87,10 +110,30 @@ export const TimeFieldComponent: React.FC<TimeFieldComponentProps> = ({
               type="button"
               size="sm"
               onClick={() => onJustificationSubmit(fieldName)}
+              disabled={isSubmitting || !field.justification.trim()}
             >
-              Salvar Justificativa
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Salvando...
+                </div>
+              ) : (
+                'Salvar Justificativa'
+              )}
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* Mostrar justificativa salva */}
+      {field.isJustified && field.justification && (
+        <div className="p-3 border rounded-lg bg-green-50 dark:bg-green-950/20 border-green-200">
+          <p className="text-xs font-medium text-green-700 dark:text-green-300 mb-1">
+            Justificativa:
+          </p>
+          <p className="text-sm text-green-600 dark:text-green-400">
+            {field.justification}
+          </p>
         </div>
       )}
     </div>

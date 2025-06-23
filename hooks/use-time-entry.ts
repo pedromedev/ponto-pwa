@@ -1,39 +1,216 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { useAuth } from '@/lib/auth'
 import {
   TimeEntryFields,
   FieldName,
-  TimeEntryData,
+  TimeEntryResponse,
+  TodayTimeEntryResponse,
+  PunchTimeDto,
   INITIAL_FIELDS_STATE
 } from '@/types/time-entry'
+import { 
+  formatTime, 
+  getCurrentTime, 
+  parseTimeToMinutes, 
+  formatMinutesToHours,
+  calculateTimeDifference
+} from '@/lib/date-utils'
+import { DEFAULT_ORGANIZATION_ID, API_ROUTES, MESSAGES } from '@/lib/constants'
 
 export const useTimeEntry = () => {
   const { user } = useAuth()
   const [fields, setFields] = useState<TimeEntryFields>(INITIAL_FIELDS_STATE)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState<Record<FieldName, boolean>>({
+    clockIn: false,
+    lunchStart: false,
+    lunchEnd: false,
+    clockOut: false
+  })
+  const [timeEntries, setTimeEntries] = useState<TimeEntryResponse[]>([])
+  const [isLoadingEntries, setIsLoadingEntries] = useState(false)
+  const [todayEntry, setTodayEntry] = useState<TodayTimeEntryResponse | null>(null)
+  const [isLoadingToday, setIsLoadingToday] = useState(false)
 
-  const getCurrentTime = (): string => {
-    const now = new Date()
-    return now.toLocaleTimeString('pt-BR', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: false 
-    })
+  // Buscar ponto do dia e histórico quando o hook for inicializado
+  useEffect(() => {
+    if (user?.id) {
+      fetchTodayTimeEntry()
+      fetchTimeEntries()
+    }
+  }, [user?.id])
+
+  // Buscar ponto do dia atual
+  const fetchTodayTimeEntry = async (): Promise<void> => {
+    if (!user?.id) return
+
+    try {
+      setIsLoadingToday(true)
+      const entry = await api.get<TodayTimeEntryResponse>(API_ROUTES.TIME_ENTRY.TODAY(user.id), true)
+      setTodayEntry(entry)
+      
+      setFields({
+        clockIn: {
+          value: entry.clockIn ? formatTime(entry.clockIn) : null,
+          isJustified: !!entry.clockInJustification,
+          justification: entry.clockInJustification || '',
+          showJustificationForm: false
+        },
+        lunchStart: {
+          value: entry.lunchStart ? formatTime(entry.lunchStart) : null,
+          isJustified: !!entry.lunchStartJustification,
+          justification: entry.lunchStartJustification || '',
+          showJustificationForm: false
+        },
+        lunchEnd: {
+          value: entry.lunchEnd ? formatTime(entry.lunchEnd) : null,
+          isJustified: !!entry.lunchEndJustification,
+          justification: entry.lunchEndJustification || '',
+          showJustificationForm: false
+        },
+        clockOut: {
+          value: entry.clockOut ? formatTime(entry.clockOut) : null,
+          isJustified: !!entry.clockOutJustification,
+          justification: entry.clockOutJustification || '',
+          showJustificationForm: false
+        }
+      })
+    } catch (error: any) {
+      if (error.status !== 404) {
+        toast.error(MESSAGES.ERROR.TODAY_LOAD_ERROR)
+      }
+    } finally {
+      setIsLoadingToday(false)
+    }
   }
 
-  const handleFieldClick = (fieldName: FieldName): void => {
-    if (fields[fieldName].isJustified) return
+  // Buscar histórico de time entries
+  const fetchTimeEntries = async (): Promise<void> => {
+    if (!user?.id) return
+
+    try {
+      setIsLoadingEntries(true)
+      const entries = await api.get<TimeEntryResponse[]>(API_ROUTES.TIME_ENTRY.USER(user.id), true)
+      setTimeEntries(entries)
+    } catch (error: any) {
+      toast.error(MESSAGES.ERROR.ENTRIES_LOAD_ERROR)
+    } finally {
+      setIsLoadingEntries(false)
+    }
+  }
+
+
+
+  const calculateCurrentWorkedHours = (): { 
+    total: string
+    details: {
+      morning: string
+      afternoon: string
+      lunchBreak: string
+    }
+  } => {
+    const { clockIn, lunchStart, lunchEnd, clockOut } = fields
     
-    const currentTime = getCurrentTime()
-    setFields(prev => ({
-      ...prev,
-      [fieldName]: {
-        ...prev[fieldName],
-        value: currentTime
+    // Se não tem entrada, não há o que calcular
+    if (!clockIn.value) {
+      return {
+        total: '0h00m',
+        details: {
+          morning: '0h00m',
+          afternoon: '0h00m',
+          lunchBreak: '0h00m'
+        }
       }
-    }))
+    }
+
+    const clockInMinutes = parseTimeToMinutes(clockIn.value)
+    let totalWorkedMinutes = 0
+    let morningMinutes = 0
+    let afternoonMinutes = 0
+    let lunchBreakMinutes = 0
+
+    // Calcular período da manhã (entrada até início do almoço)
+    if (lunchStart.value) {
+      const lunchStartMinutes = parseTimeToMinutes(lunchStart.value)
+      morningMinutes = lunchStartMinutes - clockInMinutes
+      totalWorkedMinutes += morningMinutes
+    }
+
+    // Calcular tempo de almoço
+    if (lunchStart.value && lunchEnd.value) {
+      const lunchStartMinutes = parseTimeToMinutes(lunchStart.value)
+      const lunchEndMinutes = parseTimeToMinutes(lunchEnd.value)
+      lunchBreakMinutes = lunchEndMinutes - lunchStartMinutes
+    }
+
+    // Calcular período da tarde (fim do almoço até saída)
+    if (lunchEnd.value && clockOut.value) {
+      const lunchEndMinutes = parseTimeToMinutes(lunchEnd.value)
+      const clockOutMinutes = parseTimeToMinutes(clockOut.value)
+      afternoonMinutes = clockOutMinutes - lunchEndMinutes
+      totalWorkedMinutes += afternoonMinutes
+    } else if (lunchEnd.value && !clockOut.value) {
+      const lunchEndMinutes = parseTimeToMinutes(lunchEnd.value)
+      const currentMinutes = parseTimeToMinutes(getCurrentTime())
+      afternoonMinutes = Math.max(0, currentMinutes - lunchEndMinutes)
+      totalWorkedMinutes += afternoonMinutes
+    } else if (!lunchStart.value && clockOut.value) {
+      const clockOutMinutes = parseTimeToMinutes(clockOut.value)
+      totalWorkedMinutes = clockOutMinutes - clockInMinutes
+      morningMinutes = totalWorkedMinutes
+    } else if (!lunchStart.value && !clockOut.value) {
+      const currentMinutes = parseTimeToMinutes(getCurrentTime())
+      totalWorkedMinutes = Math.max(0, currentMinutes - clockInMinutes)
+      morningMinutes = totalWorkedMinutes
+    }
+
+    return {
+      total: formatMinutesToHours(Math.max(0, totalWorkedMinutes)),
+      details: {
+        morning: formatMinutesToHours(Math.max(0, morningMinutes)),
+        afternoon: formatMinutesToHours(Math.max(0, afternoonMinutes)),
+        lunchBreak: formatMinutesToHours(Math.max(0, lunchBreakMinutes))
+      }
+    }
+  }
+
+  // Registrar ponto individual usando o novo endpoint
+  const handleFieldClick = async (fieldName: FieldName): Promise<void> => {
+    if (!user?.id || fields[fieldName].isJustified || isSubmitting[fieldName]) {
+      return
+    }
+    
+    try {
+      setIsSubmitting(prev => ({ ...prev, [fieldName]: true }))
+      
+      const punchData: PunchTimeDto = {
+        userId: user.id,
+        organizationId: DEFAULT_ORGANIZATION_ID,
+        timeType: fieldName,
+        timestamp: new Date().toISOString()
+      }
+      
+      await api.post(API_ROUTES.TIME_ENTRY.PUNCH, punchData, true)
+      
+      const currentTime = getCurrentTime()
+      setFields(prev => ({
+        ...prev,
+        [fieldName]: {
+          ...prev[fieldName],
+          value: currentTime
+        }
+      }))
+
+      toast.success(MESSAGES.SUCCESS.PUNCH_REGISTERED(fieldName))
+      
+      await fetchTodayTimeEntry()
+      
+    } catch (error: any) {
+      toast.error(`${MESSAGES.ERROR.PUNCH_ERROR(fieldName)}: ${error.message}`)
+    } finally {
+      setIsSubmitting(prev => ({ ...prev, [fieldName]: false }))
+    }
   }
 
   const handleJustifyClick = (fieldName: FieldName): void => {
@@ -46,21 +223,44 @@ export const useTimeEntry = () => {
     }))
   }
 
-  const handleJustificationSubmit = (fieldName: FieldName): void => {
-    if (!fields[fieldName].justification.trim()) {
-      toast.error('Justificativa não pode estar vazia')
+  // Submeter justificativa usando o novo endpoint
+  const handleJustificationSubmit = async (fieldName: FieldName): Promise<void> => {
+    if (!user?.id || !fields[fieldName].justification.trim() || isSubmitting[fieldName]) {
+      toast.error(MESSAGES.ERROR.EMPTY_JUSTIFICATION)
       return
     }
 
-    setFields(prev => ({
-      ...prev,
-      [fieldName]: {
-        ...prev[fieldName],
-        isJustified: true,
-        showJustificationForm: false
+    try {
+      setIsSubmitting(prev => ({ ...prev, [fieldName]: true }))
+      
+      const punchData: PunchTimeDto = {
+        userId: user.id,
+        organizationId: DEFAULT_ORGANIZATION_ID,
+        timeType: fieldName,
+        justification: fields[fieldName].justification,
+        ...(fields[fieldName].value ? {} : { timestamp: new Date().toISOString() })
       }
-    }))
-    toast.success('Justificativa salva com sucesso!')
+
+      await api.post(API_ROUTES.TIME_ENTRY.PUNCH, punchData, true)
+
+      setFields(prev => ({
+        ...prev,
+        [fieldName]: {
+          ...prev[fieldName],
+          isJustified: true,
+          showJustificationForm: false,
+          value: prev[fieldName].value || getCurrentTime()
+        }
+      }))
+
+      toast.success(MESSAGES.SUCCESS.JUSTIFICATION_SAVED)
+      await fetchTodayTimeEntry()
+      
+    } catch (error: any) {
+      toast.error(MESSAGES.ERROR.JUSTIFICATION_ERROR)
+    } finally {
+      setIsSubmitting(prev => ({ ...prev, [fieldName]: false }))
+    }
   }
 
   const handleJustificationCancel = (fieldName: FieldName): void => {
@@ -69,7 +269,7 @@ export const useTimeEntry = () => {
       [fieldName]: {
         ...prev[fieldName],
         showJustificationForm: false,
-        justification: ''
+        justification: prev[fieldName].isJustified ? prev[fieldName].justification : ''
       }
     }))
   }
@@ -84,65 +284,20 @@ export const useTimeEntry = () => {
     }))
   }
 
-  const isAllFieldsFilled = (): boolean => {
-    return Object.values(fields).every(field => field.value !== null)
-  }
-
-  const createDateTime = (timeString: string): Date => {
-    const [hours, minutes] = timeString.split(':')
-    const today = new Date()
-    today.setHours(parseInt(hours), parseInt(minutes), 0, 0)
-    return today
-  }
-
-  const buildTimeEntryData = (): TimeEntryData => {
-    if (!user?.id) {
-      throw new Error('Usuário não está autenticado')
-    }
-
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    return {
-      userId: user.id,
-      organizationId: 1, // TODO: Get from user context when available
-      date: today,
-      clockIn: fields.clockIn.value ? createDateTime(fields.clockIn.value) : undefined,
-      lunchStart: fields.lunchStart.value ? createDateTime(fields.lunchStart.value) : undefined,
-      lunchEnd: fields.lunchEnd.value ? createDateTime(fields.lunchEnd.value) : undefined,
-      clockOut: fields.clockOut.value ? createDateTime(fields.clockOut.value) : undefined,
-      clockInJustification: fields.clockIn.justification || undefined,
-      lunchStartJustification: fields.lunchStart.justification || undefined,
-      lunchEndJustification: fields.lunchEnd.justification || undefined,
-      clockOutJustification: fields.clockOut.justification || undefined
-    }
-  }
-
-  const handleSubmit = async (): Promise<void> => {
-    if (!isAllFieldsFilled()) return
-
-    try {
-      setIsSubmitting(true)
-      const timeEntryData = buildTimeEntryData()
-      await api.post('/time-entry', timeEntryData, true)
-      toast.success('Ponto registrado com sucesso!')
-      setFields(INITIAL_FIELDS_STATE)
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao registrar ponto')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
   return {
     fields,
     isSubmitting,
-    isAllFieldsFilled: isAllFieldsFilled(),
+    timeEntries,
+    isLoadingEntries,
+    todayEntry,
+    isLoadingToday,
+    currentWorkedHours: calculateCurrentWorkedHours(),
     handleFieldClick,
     handleJustifyClick,
     handleJustificationSubmit,
     handleJustificationCancel,
     handleJustificationChange,
-    handleSubmit
+    fetchTodayTimeEntry,
+    fetchTimeEntries
   }
 } 

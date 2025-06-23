@@ -4,6 +4,7 @@ import '@/styles/globals.css'
 import { ReactElement, ReactNode } from 'react'
 import { NextPage } from 'next'
 import { AuthProvider } from '@/lib/auth'
+import { Toaster } from '@/components/ui/sonner'
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
 	getLayout?: (page: ReactElement) => ReactNode
@@ -25,6 +26,7 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
 		>
 			<AuthProvider>
 				{getLayout(<Component {...pageProps} />)}
+				<Toaster />
 			</AuthProvider>
 		</ThemeProvider>
 	)

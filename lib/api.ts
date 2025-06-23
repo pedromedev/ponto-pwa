@@ -1,19 +1,8 @@
 
+import { ApiRequestOptions, ApiError } from '@/types/api'
+import { STORAGE_KEYS, COOKIE_CONFIG, API_ROUTES, MESSAGES } from './constants'
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-
-interface ApiRequestOptions extends RequestInit {
-  requireAuth?: boolean
-}
-
-class ApiError extends Error {
-  status: number
-  
-  constructor(message: string, status: number) {
-    super(message)
-    this.status = status
-    this.name = 'ApiError'
-  }
-}
 
 export const api = {
   async request<T>(endpoint: string, options: ApiRequestOptions = {}): Promise<T> {
@@ -26,9 +15,8 @@ export const api = {
       ...(headers as Record<string, string>),
     }
 
-    // Adicionar token de autenticação se necessário
     if (requireAuth) {
-      const token = localStorage.getItem('auth-token')
+      const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
       if (token) {
         requestHeaders.Authorization = `Bearer ${token}`
       }
@@ -40,12 +28,10 @@ export const api = {
         headers: requestHeaders,
       })
 
-      // Se o token expirou (401), tentar renovar
       if (response.status === 401 && requireAuth) {
         const refreshed = await this.refreshToken()
         if (refreshed) {
-          // Tentar novamente com o novo token
-          const newToken = localStorage.getItem('auth-token')
+          const newToken = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
           if (newToken) {
             const newHeaders: Record<string, string> = {
               ...requestHeaders,
@@ -62,9 +48,8 @@ export const api = {
           }
         }
         
-        // Se não conseguiu renovar ou ainda deu erro, fazer logout
         this.handleAuthError()
-        throw new ApiError('Token expirado', 401)
+        throw new ApiError(MESSAGES.ERROR.TOKEN_EXPIRED, 401)
       }
 
       if (!response.ok) {
@@ -77,18 +62,18 @@ export const api = {
       if (error instanceof ApiError) {
         throw error
       }
-      throw new ApiError('Erro de conexão', 0)
+      throw new ApiError(MESSAGES.ERROR.CONNECTION_ERROR, 0)
     }
   },
 
   async refreshToken(): Promise<boolean> {
     try {
-      const refreshToken = localStorage.getItem('refresh-token')
+      const refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
       if (!refreshToken) {
         return false
       }
 
-      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      const response = await fetch(`${API_BASE_URL}${API_ROUTES.AUTH.REFRESH}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -98,11 +83,10 @@ export const api = {
 
       if (response.ok) {
         const data = await response.json()
-        localStorage.setItem('auth-token', data.accessToken)
-        localStorage.setItem('refresh-token', data.refreshToken)
+        localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.accessToken)
+        localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, data.refreshToken)
         
-        // Atualizar cookie
-        document.cookie = `auth-token=${data.accessToken}; path=/; max-age=${60 * 60 * 24 * 7}`
+        document.cookie = `${COOKIE_CONFIG.AUTH_TOKEN.name}=${data.accessToken}; path=/; max-age=${COOKIE_CONFIG.AUTH_TOKEN.maxAge}`
         
         return true
       }
@@ -115,13 +99,11 @@ export const api = {
   },
 
   handleAuthError() {
-    // Limpar dados de autenticação
-    localStorage.removeItem('auth-token')
-    localStorage.removeItem('refresh-token')
-    localStorage.removeItem('user-data')
-    document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN)
+    localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
+    localStorage.removeItem(STORAGE_KEYS.USER_DATA)
+    document.cookie = `${COOKIE_CONFIG.AUTH_TOKEN.name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
     
-    // Redirecionar para login
     window.location.href = '/auth/login'
   },
 

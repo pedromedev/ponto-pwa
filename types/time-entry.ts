@@ -14,6 +14,30 @@ export interface TimeEntryFields {
 
 export type FieldName = keyof TimeEntryFields
 
+export interface PunchTimeDto {
+  userId: number
+  organizationId: number
+  timeType: 'clockIn' | 'lunchStart' | 'lunchEnd' | 'clockOut'
+  justification?: string
+  timestamp?: string
+  date?: string
+}
+
+// DTO para criação completa de time entry (retroativo)
+export interface CreateTimeEntryDto {
+  userId: number
+  organizationId: number
+  date: Date
+  clockIn?: Date
+  lunchStart?: Date
+  lunchEnd?: Date
+  clockOut?: Date
+  clockInJustification?: string
+  lunchStartJustification?: string
+  lunchEndJustification?: string
+  clockOutJustification?: string
+}
+
 export interface TimeEntryData {
   userId: number
   organizationId: number
@@ -26,6 +50,38 @@ export interface TimeEntryData {
   lunchStartJustification?: string
   lunchEndJustification?: string
   clockOutJustification?: string
+}
+
+export interface TimeEntryResponse {
+  id: number
+  userId: number
+  organizationId: number
+  date: string
+  clockIn: string | null
+  lunchStart: string | null
+  lunchEnd: string | null
+  clockOut: string | null
+  clockInJustification: string | null
+  lunchStartJustification: string | null
+  lunchEndJustification: string | null
+  clockOutJustification: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+// Novo tipo para response do ponto do dia
+export interface TodayTimeEntryResponse {
+  id: number | null
+  userId: number
+  date: string
+  clockIn: string | null
+  lunchStart: string | null
+  lunchEnd: string | null
+  clockOut: string | null
+  clockInJustification: string | null
+  lunchStartJustification: string | null
+  lunchEndJustification: string | null
+  clockOutJustification: string | null
 }
 
 export const FIELD_LABELS: Record<FieldName, string> = {

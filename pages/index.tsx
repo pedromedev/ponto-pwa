@@ -2,8 +2,9 @@ import React from 'react'
 import Page from '@/components/page'
 import Section from '@/components/section'
 import AuthGuard from '@/components/auth-guard'
-import { Button } from '@/components/ui/button'
 import { TimeFieldComponent } from '@/components/time-field-component'
+import { TimeEntriesList } from '@/components/time-entries-list'
+import { TodayTimeEntryStatus } from '@/components/today-timeentry-status'
 import { useTimeEntry } from '@/hooks/use-time-entry'
 import { FieldName } from '@/types/time-entry'
 
@@ -13,36 +14,48 @@ const Index = () => {
 	const {
 		fields,
 		isSubmitting,
-		isAllFieldsFilled,
+		timeEntries,
+		isLoadingEntries,
+		todayEntry,
+		isLoadingToday,
+		currentWorkedHours,
 		handleFieldClick,
 		handleJustifyClick,
 		handleJustificationSubmit,
 		handleJustificationCancel,
 		handleJustificationChange,
-		handleSubmit
+		fetchTodayTimeEntry
 	} = useTimeEntry()
+
+	// Verificar se pelo menos a entrada foi preenchida para mostrar o cálculo
+	const hasAnyTime = fields.clockIn.value !== null
 
 	return (
 		<AuthGuard>
 			<Page>
 				<Section>
-					<div className="space-y-6">
-						<Header />
+					<div className="space-y-8">
+						<Header isLoadingToday={isLoadingToday} />
+						<TodayTimeEntryStatus 
+							todayEntry={todayEntry}
+							isLoading={isLoadingToday}
+							currentWorkedHours={currentWorkedHours}
+							hasAnyTime={hasAnyTime}
+						/>
 						<TimeFieldsGrid
 							fields={fields}
 							fieldOrder={FIELD_ORDER}
+							isSubmitting={isSubmitting}
 							onFieldClick={handleFieldClick}
 							onJustifyClick={handleJustifyClick}
 							onJustificationSubmit={handleJustificationSubmit}
 							onJustificationCancel={handleJustificationCancel}
 							onJustificationChange={handleJustificationChange}
 						/>
-						{isAllFieldsFilled && (
-							<SubmitButton
-								onSubmit={handleSubmit}
-								isSubmitting={isSubmitting}
-							/>
-						)}
+						<TimeEntriesList 
+							timeEntries={timeEntries}
+							isLoading={isLoadingEntries}
+						/>
 					</div>
 				</Section>
 			</Page>
@@ -50,13 +63,17 @@ const Index = () => {
 	)
 }
 
-const Header = () => (
+interface HeaderProps {
+	isLoadingToday: boolean
+}
+
+const Header: React.FC<HeaderProps> = ({ isLoadingToday }) => (
 	<div>
 		<h2 className='text-2xl font-semibold text-foreground'>
-			Registrar Ponto
+			Registrar Ponto {isLoadingToday && <span className="text-muted-foreground">- Carregando...</span>}
 		</h2>
 		<p className='text-muted-foreground mt-1'>
-			Clique nos campos para registrar os horários do seu dia
+			Clique nos campos para registrar os horários do seu dia ou adicione justificativas
 		</p>
 	</div>
 )
@@ -64,6 +81,7 @@ const Header = () => (
 interface TimeFieldsGridProps {
 	fields: Record<FieldName, import('@/types/time-entry').TimeField>
 	fieldOrder: FieldName[]
+	isSubmitting: Record<FieldName, boolean>
 	onFieldClick: (fieldName: FieldName) => void
 	onJustifyClick: (fieldName: FieldName) => void
 	onJustificationSubmit: (fieldName: FieldName) => void
@@ -74,6 +92,7 @@ interface TimeFieldsGridProps {
 const TimeFieldsGrid: React.FC<TimeFieldsGridProps> = ({
 	fields,
 	fieldOrder,
+	isSubmitting,
 	onFieldClick,
 	onJustifyClick,
 	onJustificationSubmit,
@@ -86,6 +105,7 @@ const TimeFieldsGrid: React.FC<TimeFieldsGridProps> = ({
 				key={fieldName}
 				fieldName={fieldName}
 				field={fields[fieldName]}
+				isSubmitting={isSubmitting[fieldName]}
 				onFieldClick={onFieldClick}
 				onJustifyClick={onJustifyClick}
 				onJustificationSubmit={onJustificationSubmit}
@@ -93,27 +113,6 @@ const TimeFieldsGrid: React.FC<TimeFieldsGridProps> = ({
 				onJustificationChange={onJustificationChange}
 			/>
 		))}
-	</div>
-)
-
-interface SubmitButtonProps {
-	onSubmit: () => void
-	isSubmitting: boolean
-}
-
-const SubmitButton: React.FC<SubmitButtonProps> = ({
-	onSubmit,
-	isSubmitting
-}) => (
-	<div className="flex justify-center pt-6 animate-in slide-in-from-bottom-3 duration-500">
-		<Button
-			onClick={onSubmit}
-			disabled={isSubmitting}
-			size="lg"
-			className="px-8 py-3 text-base font-medium"
-		>
-			{isSubmitting ? 'Registrando...' : 'Registrar Ponto'}
-		</Button>
 	</div>
 )
 

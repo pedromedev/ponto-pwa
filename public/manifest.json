@@ -1,7 +1,7 @@
 {
-	"name": "Rice Bowl",
-	"short_name": "Rice Bowl",
-	"description": "Fluffless jasmine rice for those cold winter nights",
+	"name": "Ponto PWA",
+	"short_name": "Ponto",
+	"description": "Sistema de controle de ponto eletrônico",
 	"icons": [
 		{
 			"src": "/images/icon-192.png",
