@@ -34,34 +34,46 @@ const TeamMembersModal = ({ team, isOpen, onClose, availableUsers, onUpdate }: T
 
   const loadTeamMembers = async () => {
     try {
-      // Temporariamente usando dados mock até os endpoints específicos estarem prontos
-      // TODO: Implementar endpoint GET /organization/{organizationId}/teams/{id}/members
-      console.log('Carregando membros da equipe:', team.id)
+      // Tenta carregar membros do backend
+      const data = await api.get<TeamMember[]>(API_ROUTES.ORGANIZATION.TEAM_MEMBERS(team.id), true)
+      setMembers(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Erro ao carregar membros da equipe:', error)
       
-      // Simulando uma lista de membros baseada nos dados da equipe
-      if (team.members) {
+      // Fallback: usar dados da equipe se disponíveis
+      if (team.members && Array.isArray(team.members)) {
         setMembers(team.members)
       } else {
         setMembers([])
       }
-    } catch (error) {
-      console.error('Erro ao carregar membros da equipe:', error)
-      toast.error('Erro ao carregar membros da equipe')
+      
+      // Só mostra erro se não há dados de fallback
+      if (!team.members || !Array.isArray(team.members)) {
+        toast.error('Erro ao carregar membros da equipe')
+      }
     }
   }
 
   const handleAddMember = async (userId: number) => {
     setLoading(true)
     try {
-      // TODO: Usar endpoint POST /organization/{organizationId}/teams/{id}/members
       const request = { userId }
       await api.post(API_ROUTES.ORGANIZATION.ADD_MEMBER(team.id), request, true)
       toast.success('Membro adicionado com sucesso')
       loadTeamMembers()
       onUpdate()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao adicionar membro:', error)
-      toast.error('Funcionalidade ainda não implementada no backend')
+      
+      if (error.status === 404) {
+        toast.error('Endpoint não encontrado. Verifique se o backend está atualizado.')
+      } else if (error.status === 409) {
+        toast.error('Este usuário já faz parte da equipe')
+      } else if (error.status === 403) {
+        toast.error('Você não tem permissão para adicionar membros a esta equipe')
+      } else {
+        toast.error('Erro ao adicionar membro. Tente novamente.')
+      }
     } finally {
       setLoading(false)
     }
@@ -72,23 +84,36 @@ const TeamMembersModal = ({ team, isOpen, onClose, availableUsers, onUpdate }: T
 
     setLoading(true)
     try {
-      // TODO: Usar endpoint DELETE /organization/{organizationId}/teams/{id}/members/{userId}
       await api.delete(API_ROUTES.ORGANIZATION.REMOVE_MEMBER(team.id, userId), true)
       toast.success('Membro removido com sucesso')
       loadTeamMembers()
       onUpdate()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao remover membro:', error)
-      toast.error('Funcionalidade ainda não implementada no backend')
+      
+      if (error.status === 404) {
+        toast.error('Endpoint não encontrado. Verifique se o backend está atualizado.')
+      } else if (error.status === 403) {
+        toast.error('Você não tem permissão para remover membros desta equipe')
+      } else if (error.status === 409) {
+        toast.error('Não é possível remover este membro da equipe')
+      } else {
+        toast.error('Erro ao remover membro. Tente novamente.')
+      }
     } finally {
       setLoading(false)
     }
   }
 
-  // Filtrar usuários que não estão na equipe
-  const usersNotInTeam = availableUsers.filter(user => 
-    !members.some(member => member.id === user.id) && user.id !== team.managerId
-  )
+  // Filtrar usuários que não estão na equipe e que não são o gerente atual
+  const usersNotInTeam = Array.isArray(availableUsers) ? availableUsers.filter(user => 
+    !(members || []).some(member => member.id === user.id) && 
+    user.id !== team.managerId
+  ) : []
+
+  // Separar por role para melhor organização
+  const managersAvailable = Array.isArray(usersNotInTeam) ? usersNotInTeam.filter(user => user.role === 'MANAGER') : []
+  const membersAvailable = Array.isArray(usersNotInTeam) ? usersNotInTeam.filter(user => user.role === 'MEMBER') : []
 
   if (!isOpen) return null
 
@@ -131,33 +156,76 @@ const TeamMembersModal = ({ team, isOpen, onClose, availableUsers, onUpdate }: T
             </div>
 
             {/* Adicionar Novo Membro */}
-            {usersNotInTeam.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Adicionar Membro</h3>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start" disabled={loading}>
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Selecionar usuário para adicionar
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-full max-w-xs">
-                    {usersNotInTeam.map(user => (
-                      <DropdownMenuItem
-                        key={user.id}
-                        onClick={() => handleAddMember(user.id)}
-                        disabled={loading}
-                      >
-                        <div className="flex flex-col">
-                          <span>{user.name}</span>
-                          <span className="text-xs text-muted-foreground">{user.email}</span>
-                        </div>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            )}
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Adicionar Membro</h3>
+              {usersNotInTeam.length > 0 ? (
+                <div className="space-y-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start" disabled={loading}>
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        {loading ? 'Adicionando...' : 'Selecionar usuário para adicionar'}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-full max-w-xs max-h-60 overflow-y-auto">
+                      {managersAvailable.length > 0 && (
+                        <>
+                          <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">
+                            Gerentes
+                          </div>
+                          {managersAvailable.map(user => (
+                            <DropdownMenuItem
+                              key={user.id}
+                              onClick={() => handleAddMember(user.id)}
+                              disabled={loading}
+                            >
+                              <div className="flex flex-col">
+                                <span>{user.name}</span>
+                                <span className="text-xs text-muted-foreground">{user.email}</span>
+                              </div>
+                            </DropdownMenuItem>
+                          ))}
+                        </>
+                      )}
+                      
+                      {membersAvailable.length > 0 && (
+                        <>
+                          {managersAvailable.length > 0 && (
+                            <div className="h-px bg-border my-1" />
+                          )}
+                          <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">
+                            Membros
+                          </div>
+                          {membersAvailable.map(user => (
+                            <DropdownMenuItem
+                              key={user.id}
+                              onClick={() => handleAddMember(user.id)}
+                              disabled={loading}
+                            >
+                              <div className="flex flex-col">
+                                <span>{user.name}</span>
+                                <span className="text-xs text-muted-foreground">{user.email}</span>
+                              </div>
+                            </DropdownMenuItem>
+                          ))}
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <p className="text-xs text-muted-foreground">
+                    {usersNotInTeam.length} usuário(s) disponível(is) para adicionar
+                  </p>
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      Todos os usuários disponíveis já fazem parte desta equipe
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
 
             {/* Lista de Membros */}
             <div>
@@ -170,7 +238,7 @@ const TeamMembersModal = ({ team, isOpen, onClose, availableUsers, onUpdate }: T
                   <CardContent className="p-6 text-center">
                     <p className="text-muted-foreground">Nenhum membro na equipe</p>
                     <p className="text-xs text-muted-foreground mt-2">
-                      Funcionalidade de membros será implementada quando o backend estiver pronto
+                      Use o botão "Adicionar Membro" acima para adicionar pessoas à equipe
                     </p>
                   </CardContent>
                 </Card>

@@ -399,7 +399,12 @@ const GerenciamentoPage: NextPageWithLayout = () => {
       {activeTab === 'teams' && (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold">Gerenciamento de Equipes</h2>
+            <div>
+              <h2 className="text-2xl font-bold">Gerenciamento de Equipes</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Clique no botão "Membros" de cada equipe para adicionar ou remover pessoas
+              </p>
+            </div>
             <Button onClick={() => setShowTeamForm(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Nova Equipe
@@ -484,16 +489,28 @@ const GerenciamentoPage: NextPageWithLayout = () => {
                       </div>
                     </div>
                     <div className="flex space-x-2">
-                      <Button variant="outline" size="sm" onClick={() => editTeam(team)}>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => editTeam(team)}
+                        title="Editar equipe"
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => viewTeamMembers(team)}>
-                        <Eye className="h-4 w-4" />
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        onClick={() => viewTeamMembers(team)}
+                        title="Gerenciar membros"
+                      >
+                        <Users className="h-4 w-4" />
+                        <span className="ml-1 hidden sm:inline">Membros</span>
                       </Button>
                       <Button 
                         variant="outline" 
                         size="sm" 
                         onClick={() => handleDeleteTeam(team.id)}
+                        title="Excluir equipe"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
