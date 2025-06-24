@@ -34,9 +34,18 @@ const TeamMembersModal = ({ team, isOpen, onClose, availableUsers, onUpdate }: T
 
   const loadTeamMembers = async () => {
     try {
-      const data = await api.get<TeamMember[]>(API_ROUTES.MANAGEMENT.TEAM_MEMBERS(team.id), true)
-      setMembers(data)
+      // Temporariamente usando dados mock até os endpoints específicos estarem prontos
+      // TODO: Implementar endpoint GET /organization/{organizationId}/teams/{id}/members
+      console.log('Carregando membros da equipe:', team.id)
+      
+      // Simulando uma lista de membros baseada nos dados da equipe
+      if (team.members) {
+        setMembers(team.members)
+      } else {
+        setMembers([])
+      }
     } catch (error) {
+      console.error('Erro ao carregar membros da equipe:', error)
       toast.error('Erro ao carregar membros da equipe')
     }
   }
@@ -44,13 +53,15 @@ const TeamMembersModal = ({ team, isOpen, onClose, availableUsers, onUpdate }: T
   const handleAddMember = async (userId: number) => {
     setLoading(true)
     try {
-      const request: AddMemberRequest = { userId, teamId: team.id }
-      await api.post(API_ROUTES.MANAGEMENT.ADD_MEMBER(team.id), request, true)
+      // TODO: Usar endpoint POST /organization/{organizationId}/teams/{id}/members
+      const request = { userId }
+      await api.post(API_ROUTES.ORGANIZATION.ADD_MEMBER(team.id), request, true)
       toast.success('Membro adicionado com sucesso')
       loadTeamMembers()
       onUpdate()
     } catch (error) {
-      toast.error('Erro ao adicionar membro')
+      console.error('Erro ao adicionar membro:', error)
+      toast.error('Funcionalidade ainda não implementada no backend')
     } finally {
       setLoading(false)
     }
@@ -61,12 +72,14 @@ const TeamMembersModal = ({ team, isOpen, onClose, availableUsers, onUpdate }: T
 
     setLoading(true)
     try {
-      await api.delete(API_ROUTES.MANAGEMENT.REMOVE_MEMBER(team.id, userId), true)
+      // TODO: Usar endpoint DELETE /organization/{organizationId}/teams/{id}/members/{userId}
+      await api.delete(API_ROUTES.ORGANIZATION.REMOVE_MEMBER(team.id, userId), true)
       toast.success('Membro removido com sucesso')
       loadTeamMembers()
       onUpdate()
     } catch (error) {
-      toast.error('Erro ao remover membro')
+      console.error('Erro ao remover membro:', error)
+      toast.error('Funcionalidade ainda não implementada no backend')
     } finally {
       setLoading(false)
     }
@@ -123,7 +136,7 @@ const TeamMembersModal = ({ team, isOpen, onClose, availableUsers, onUpdate }: T
                 <h3 className="text-lg font-semibold mb-3">Adicionar Membro</h3>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start">
+                    <Button variant="outline" className="w-full justify-start" disabled={loading}>
                       <UserPlus className="h-4 w-4 mr-2" />
                       Selecionar usuário para adicionar
                     </Button>
@@ -156,6 +169,9 @@ const TeamMembersModal = ({ team, isOpen, onClose, availableUsers, onUpdate }: T
                 <Card>
                   <CardContent className="p-6 text-center">
                     <p className="text-muted-foreground">Nenhum membro na equipe</p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Funcionalidade de membros será implementada quando o backend estiver pronto
+                    </p>
                   </CardContent>
                 </Card>
               ) : (

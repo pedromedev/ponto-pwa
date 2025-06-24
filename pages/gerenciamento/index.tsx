@@ -22,7 +22,7 @@ import {
   User
 } from '@/types/management'
 import { api } from '@/lib/api'
-import { API_ROUTES } from '@/lib/constants'
+import { API_ROUTES, DEFAULT_ORGANIZATION_ID } from '@/lib/constants'
 import { toast } from 'sonner'
 import { 
   Users, 
@@ -107,7 +107,7 @@ const GerenciamentoPage: NextPageWithLayout = () => {
 
   const loadTeams = async () => {
     try {
-      const data = await api.get<Team[]>(API_ROUTES.MANAGEMENT.TEAMS, true)
+      const data = await api.get<Team[]>(API_ROUTES.ORGANIZATION.TEAMS(), true)
       setTeams(data)
     } catch (error) {
       console.error('Erro ao carregar equipes:', error)
@@ -144,10 +144,10 @@ const GerenciamentoPage: NextPageWithLayout = () => {
     setLoading(true)
     try {
       if (editingTeam) {
-        await api.put(API_ROUTES.MANAGEMENT.TEAM(editingTeam.id), teamForm, true)
+        await api.put(API_ROUTES.ORGANIZATION.TEAM(editingTeam.id), teamForm, true)
         toast.success('Equipe atualizada com sucesso')
       } else {
-        await api.post(API_ROUTES.MANAGEMENT.TEAMS, teamForm, true)
+        await api.post(API_ROUTES.ORGANIZATION.TEAMS(), teamForm, true)
         toast.success('Equipe criada com sucesso')
       }
       
@@ -170,7 +170,7 @@ const GerenciamentoPage: NextPageWithLayout = () => {
 
     setLoading(true)
     try {
-      await api.delete(API_ROUTES.MANAGEMENT.TEAM(teamId), true)
+      await api.delete(API_ROUTES.ORGANIZATION.TEAM(teamId), true)
       toast.success('Equipe excluída com sucesso')
       
       // Recarregar dados
@@ -238,13 +238,16 @@ const GerenciamentoPage: NextPageWithLayout = () => {
   const handleGenerateReport = async () => {
     setLoading(true)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${API_ROUTES.MANAGEMENT.REPORTS}`, {
-        method: 'POST',
+      // Determinar qual endpoint usar baseado no filtro de equipe
+      const reportUrl = reportFilters.teamId 
+        ? API_ROUTES.REPORTS.TEAM_MONTHLY(reportFilters.teamId)
+        : API_ROUTES.REPORTS.ORGANIZATION_MONTHLY()
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${reportUrl}?year=${reportFilters.year}&month=${reportFilters.month}`, {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('auth-token')}`
-        },
-        body: JSON.stringify(reportFilters)
+        }
       })
 
       if (response.ok) {
@@ -278,7 +281,7 @@ const GerenciamentoPage: NextPageWithLayout = () => {
   const handleTestEmail = async () => {
     setLoading(true)
     try {
-      await api.post(API_ROUTES.MANAGEMENT.TEST_EMAIL, reportFilters, true)
+      await api.post(API_ROUTES.REPORTS.TEST_MONTHLY, reportFilters, true)
       toast.success('Email de teste enviado com sucesso')
     } catch (error) {
       console.error('Erro ao enviar email de teste:', error)

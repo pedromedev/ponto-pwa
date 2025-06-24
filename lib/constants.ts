@@ -5,7 +5,9 @@ export const API_ROUTES = {
     PUNCH: '/time-entry/punch',
     TODAY: (userId: number) => `/time-entry/today/${userId}`,
     USER: (userId: number) => `/time-entry/user/${userId}`,
-    CREATE: '/time-entry'
+    CREATE: '/time-entry',
+    BY_DATE: (userId: number, date: string) => `/time-entry/data/${userId}/${date}`,
+    BY_ID: (id: number) => `/time-entry/${id}`
   },
   AUTH: {
     LOGIN: '/auth/login',
@@ -14,19 +16,24 @@ export const API_ROUTES = {
     LOGOUT: '/auth/logout',
     PROFILE: '/auth/profile'
   },
+  ORGANIZATION: {
+    TEAMS: (organizationId: number = DEFAULT_ORGANIZATION_ID) => `/organization/${organizationId}/teams`,
+    TEAM: (teamId: number, organizationId: number = DEFAULT_ORGANIZATION_ID) => `/organization/${organizationId}/teams/${teamId}`,
+    TEAM_MEMBERS: (teamId: number, organizationId: number = DEFAULT_ORGANIZATION_ID) => `/organization/${organizationId}/teams/${teamId}/members`,
+    ADD_MEMBER: (teamId: number, organizationId: number = DEFAULT_ORGANIZATION_ID) => `/organization/${organizationId}/teams/${teamId}/members`,
+    REMOVE_MEMBER: (teamId: number, userId: number, organizationId: number = DEFAULT_ORGANIZATION_ID) => `/organization/${organizationId}/teams/${teamId}/members/${userId}`,
+    TEAM_TIME_ENTRIES: (teamId: number, organizationId: number = DEFAULT_ORGANIZATION_ID) => `/organization/${organizationId}/teams/${teamId}/time-entries`
+  },
+  REPORTS: {
+    TEAM_MONTHLY: (teamId: number) => `/reports/team/${teamId}/monthly`,
+    ORGANIZATION_MONTHLY: (organizationId: number = DEFAULT_ORGANIZATION_ID) => `/reports/organization/${organizationId}/monthly`,
+    TEST_MONTHLY: '/reports/test/monthly'
+  },
   MANAGEMENT: {
-    STATS: '/organization/stats',
-    TEAMS: '/organization/1/teams',
-    TEAM: (id: number) => `/organization/1/teams/${id}`,
-    TEAM_MEMBERS: (id: number) => `/organization/1/teams/${id}/members`,
-    ADD_MEMBER: (teamId: number) => `/organization/1/teams/${teamId}/members`,
-    REMOVE_MEMBER: (teamId: number, userId: number) => `/organization/1/teams/${teamId}/members/${userId}`,
-    INVITATIONS: '/organization/1/invites',
-    INVITATION: (id: number) => `/organization/1/invite/${id}`,
-    AVAILABLE_USERS: '/organization/1/users/available',
-    REPORTS: '/reports/organization/1/monthly',
-    REPORTS_TEAM: (teamId: number) => `/reports/team/${teamId}/monthly`,
-    TEST_EMAIL: '/reports/test/monthly'
+    STATS: '/management/stats',
+    INVITATIONS: '/management/invitations',
+    INVITATION: (id: number) => `/management/invitations/${id}`,
+    AVAILABLE_USERS: '/management/users/available'
   }
 } as const
 

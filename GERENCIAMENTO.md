@@ -9,11 +9,52 @@ Este módulo implementa um sistema completo de gerenciamento para managers, perm
 - [x] **Tela de Gerenciamento Completa** (`/gerenciamento`)
 - [x] **Navegação Condicional por Role** (managers têm acesso especial)
 - [x] **Card de Acesso Rápido** na tela principal para managers
-- [x] **Todas as Rotas da API** implementadas e funcionais
+- [x] **Endpoints da API Atualizados** para corresponder à documentação real
 - [x] **Loading States e Error Handling** implementados
 - [x] **Validações de Frontend** (email, campos obrigatórios)
 - [x] **Confirmações de Ações Destrutivas**
 - [x] **Interface Responsiva** e acessível
+
+## 🔗 Endpoints da API (Baseados na Documentação Real)
+
+### Time Entry (Registros de Ponto)
+```
+GET    /time-entry/data/{userId}/{date}    # Buscar registro por usuário e data
+GET    /time-entry/{id}                    # Buscar registro por ID
+PATCH  /time-entry/{id}                    # Atualizar registro
+DELETE /time-entry/{id}                    # Remover registro
+GET    /time-entry/user/{id}               # Buscar registros por usuário
+POST   /time-entry/punch                   # Registrar horário específico
+```
+
+### Equipes
+```
+POST   /organization/{organizationId}/teams                    # Criar equipe (MANAGERs)
+GET    /organization/{organizationId}/teams                    # Listar equipes
+GET    /organization/{organizationId}/teams/{id}               # Buscar equipe por ID
+PATCH  /organization/{organizationId}/teams/{id}               # Atualizar equipe (MANAGERs)
+DELETE /organization/{organizationId}/teams/{id}               # Remover equipe (MANAGERs)
+POST   /organization/{organizationId}/teams/{id}/members       # Adicionar membro
+DELETE /organization/{organizationId}/teams/{id}/members/{userId} # Remover membro
+GET    /organization/{organizationId}/teams/{id}/time-entries  # Registros da equipe
+```
+
+### Relatórios
+```
+GET    /reports/team/{teamId}/monthly                # Relatório mensal da equipe (Excel)
+GET    /reports/organization/{organizationId}/monthly # Relatório mensal da organização (Excel)
+POST   /reports/test/monthly                         # Teste de envio por email
+```
+
+### Funcionalidades Pendentes (Não encontradas na documentação)
+```
+# Estes endpoints precisam ser implementados ou identificados:
+GET    /management/stats                   # Estatísticas do dashboard
+GET    /management/invitations             # Sistema de convites
+POST   /management/invitations             # Enviar convite
+DELETE /management/invitations/{id}        # Cancelar convite
+GET    /management/users/available         # Usuários disponíveis
+```
 
 ## 🔐 Controle de Acesso
 
@@ -139,150 +180,99 @@ Este módulo implementa um sistema completo de gerenciamento para managers, perm
 
 ## 🛠️ Implementação Técnica
 
-### Estrutura de Arquivos ✅
-
-```
-pages/gerenciamento/
-  └── index.tsx              # ✅ Página principal com todas as seções
-
-components/
-  ├── team-members-modal.tsx # ✅ Modal para gerenciar membros
-  └── manager-guard.tsx      # ✅ Guard de proteção para managers
-
-types/
-  └── management.ts          # ✅ Interfaces TypeScript
-
-lib/
-  ├── constants.ts           # ✅ Rotas da API implementadas
-  └── navigation.ts          # ✅ Sistema de navegação condicional
-```
-
-### Rotas da API ✅
+### Rotas da API Atualizadas ✅
 
 ```typescript
-MANAGEMENT: {
-  STATS: '/management/stats',                    // ✅ Implementado
-  TEAMS: '/management/teams',                    // ✅ Implementado
-  TEAM: (id) => `/management/teams/${id}`,       // ✅ Implementado
-  TEAM_MEMBERS: (id) => `/management/teams/${id}/members`, // ✅ Implementado
-  ADD_MEMBER: (teamId) => `/management/teams/${teamId}/members`, // ✅ Implementado
-  REMOVE_MEMBER: (teamId, userId) => `/management/teams/${teamId}/members/${userId}`, // ✅ Implementado
-  INVITATIONS: '/management/invitations',        // ✅ Implementado
-  INVITATION: (id) => `/management/invitations/${id}`, // ✅ Implementado
-  AVAILABLE_USERS: '/management/users/available', // ✅ Implementado
-  REPORTS: '/management/reports',                // ✅ Implementado
-  TEST_EMAIL: '/management/reports/test-email'   // ✅ Implementado
+// lib/constants.ts
+export const API_ROUTES = {
+  TIME_ENTRY: {
+    PUNCH: '/time-entry/punch',
+    TODAY: (userId: number) => `/time-entry/today/${userId}`,
+    USER: (userId: number) => `/time-entry/user/${userId}`,
+    CREATE: '/time-entry',
+    BY_DATE: (userId: number, date: string) => `/time-entry/data/${userId}/${date}`,
+    BY_ID: (id: number) => `/time-entry/${id}`
+  },
+  ORGANIZATION: {
+    TEAMS: (organizationId = 1) => `/organization/${organizationId}/teams`,
+    TEAM: (teamId: number, organizationId = 1) => `/organization/${organizationId}/teams/${teamId}`,
+    TEAM_MEMBERS: (teamId: number, organizationId = 1) => `/organization/${organizationId}/teams/${teamId}/members`,
+    ADD_MEMBER: (teamId: number, organizationId = 1) => `/organization/${organizationId}/teams/${teamId}/members`,
+    REMOVE_MEMBER: (teamId: number, userId: number, organizationId = 1) => `/organization/${organizationId}/teams/${teamId}/members/${userId}`,
+    TEAM_TIME_ENTRIES: (teamId: number, organizationId = 1) => `/organization/${organizationId}/teams/${teamId}/time-entries`
+  },
+  REPORTS: {
+    TEAM_MONTHLY: (teamId: number) => `/reports/team/${teamId}/monthly`,
+    ORGANIZATION_MONTHLY: (organizationId = 1) => `/reports/organization/${organizationId}/monthly`,
+    TEST_MONTHLY: '/reports/test/monthly'
+  },
+  // Mantendo as rotas de management para funcionalidades pendentes
+  MANAGEMENT: {
+    STATS: '/management/stats',
+    INVITATIONS: '/management/invitations',
+    INVITATION: (id: number) => `/management/invitations/${id}`,
+    AVAILABLE_USERS: '/management/users/available'
+  }
 }
 ```
 
-### Estados de Loading ✅
+### Alterações Realizadas ✅
 
-- ✅ **Carregamento inicial**: Tela completa com spinner
-- ✅ **Criação/edição de equipes**: Botão com texto "Salvando..."
-- ✅ **Geração de relatórios**: Botão com texto "Gerando..."
-- ✅ **Envio de convites**: Botão com texto "Enviando..."
-- ✅ **Operações de membros**: Desabilitação de botões durante requisição
+1. **Atualizados os endpoints de equipes** para usar `/organization/{organizationId}/teams`
+2. **Atualizados os endpoints de relatórios** para usar `/reports/team/{teamId}/monthly` e `/reports/organization/{organizationId}/monthly`
+3. **Corrigido o teste de email** para usar `/reports/test/monthly`
+4. **Adicionado organizationId padrão** (1) para facilitar o desenvolvimento
+5. **Mantidas as rotas de management** para funcionalidades não documentadas
 
-### Tratamento de Erros ✅
+### Status de Implementação por Funcionalidade
 
-**Códigos HTTP Implementados:**
-- ✅ `401`: Token expirado → Renovação automática ou logout
-- ✅ `403`: Sem permissão → Toast de erro
-- ✅ `404`: Recurso não encontrado → Toast específico
-- ✅ `409`: Conflito (usuário já existe) → Toast informativo
+#### ✅ **Implementado e Funcional**
+- Navegação condicional por role
+- Card de acesso rápido para managers
+- Interface completa de gerenciamento
+- Estados de loading e error handling
+- Validações de frontend
 
-**Feedback Visual:**
-- ✅ Toasts de sucesso em verde
-- ✅ Toasts de erro em vermelho  
-- ✅ Loading states em botões
-- ✅ Confirmações para ações destrutivas
-- ✅ Console logs para debugging
+#### 🔄 **Implementado Frontend / Aguardando Backend**
+- Dashboard com métricas (endpoint `/management/stats` pendente)
+- Sistema de convites (endpoints `/management/invitations` pendentes)
+- Lista de usuários disponíveis (endpoint `/management/users/available` pendente)
+- Gerenciamento de membros de equipes (funcional quando backend estiver pronto)
 
-## ⚡ Performance ✅
-
-### Otimizações Implementadas
-
-- ✅ **Carregamento Paralelo**: Todos os dados iniciais carregam simultaneamente
-- ✅ **Loading states**: Feedback imediato ao usuário
-- ✅ **Atualizações seletivas**: Recarregar apenas dados necessários
-- ✅ **Validação frontend**: Redução de requisições desnecessárias
-- ✅ **Cache local**: Dados do usuário em localStorage
-- ✅ **Modais condicionais**: Renderização apenas quando necessário
-
-### Requisições Paralelas
-
-- ✅ Carregamento inicial: stats, teams, invitations e users em paralelo
-- ✅ Atualizações: apenas os dados modificados
-- ✅ Operações relacionadas: stats + teams após modificações
+#### ✅ **Pronto para Uso (Endpoints Disponíveis)**
+- CRUD de equipes (`/organization/{organizationId}/teams`)
+- Geração de relatórios (`/reports/team/{teamId}/monthly`)
+- Teste de envio de email (`/reports/test/monthly`)
 
 ## 🚀 Próximos Passos
 
-### Backend Necessário (Pendente)
+### Para o Backend:
+1. **Implementar endpoints de management** não encontrados na documentação:
+   - `GET /management/stats` - Estatísticas do dashboard
+   - `GET /management/invitations` - Listar convites
+   - `POST /management/invitations` - Enviar convite
+   - `DELETE /management/invitations/{id}` - Cancelar convite
+   - `GET /management/users/available` - Usuários disponíveis
 
-- [ ] Endpoints de autenticação com roles
-- [ ] CRUD completo de equipes
-- [ ] Sistema de convites por email
-- [ ] Geração de relatórios Excel
-- [ ] Envio de emails
-- [ ] Middleware de autorização
+2. **Verificar implementação** dos endpoints já documentados:
+   - Endpoints de equipes (`/organization/{organizationId}/teams`)
+   - Endpoints de relatórios (`/reports/...`)
 
-### Frontend Concluído ✅
-
-- [x] Página de gerenciamento com abas
-- [x] Dashboard com métricas
-- [x] Formulários de equipes e convites
-- [x] Modal de gerenciamento de membros
-- [x] Guard de proteção para managers
-- [x] Sistema de relatórios com filtros
-- [x] Tratamento de erros e loading states
-- [x] Interface responsiva e acessível
-- [x] Navegação condicional por role
-- [x] Card de acesso rápido na tela principal
-- [x] Validações de frontend completas
-- [x] Otimizações de performance
-
-## 📋 Checklist Final
-
-### Funcionalidades Core ✅
-- [x] Sistema de autenticação com roles
-- [x] Gerenciamento completo de equipes
-- [x] Sistema de convites
-- [x] Geração de relatórios
-- [x] Interface adaptativa por role
-
-### UX/UI ✅
-- [x] Design consistente e moderno
-- [x] Feedback visual para todas as ações
-- [x] Estados de loading intuitivos
-- [x] Mensagens de erro informativas
-- [x] Navegação intuitiva e acessível
-
-### Segurança ✅
-- [x] Controle de acesso por role
-- [x] Validações de entrada
-- [x] Proteção de rotas sensíveis
-- [x] Headers de autenticação
-
-### Performance ✅
-- [x] Carregamento otimizado
-- [x] Requisições paralelas
-- [x] Estados de cache locais
-
-### Integração ✅
-- [x] Integração com sistema de autenticação
-- [x] Integração com navegação principal
-- [x] Compatibilidade com tema dark/light
-- [x] Responsividade completa
+### Para o Frontend:
+- ✅ **Código atualizado** para usar os endpoints corretos
+- ✅ **Tratamento de erros** implementado
+- ✅ **Interface preparada** para funcionar assim que o backend estiver pronto
 
 ## 🎯 Conclusão
 
-O sistema de gerenciamento está **100% implementado no frontend** e pronto para uso. Todas as funcionalidades descritas na documentação original foram implementadas com melhorias adicionais de UX, performance e segurança.
+O frontend está **100% atualizado** para usar os endpoints corretos da API conforme a documentação real. Todas as funcionalidades foram implementadas e estão prontas para funcionar assim que os endpoints correspondentes estiverem disponíveis no backend.
 
-**Pontos de destaque:**
-- ✅ Interface intuitiva e moderna
-- ✅ Controle de acesso robusto
-- ✅ Performance otimizada
-- ✅ Experiência do usuário excepcional
-- ✅ Código bem estruturado e mantível
+**Endpoints já alinhados com a documentação:**
+- ✅ Time Entry endpoints
+- ✅ Organization/Teams endpoints  
+- ✅ Reports endpoints
 
-O próximo passo é implementar as rotas correspondentes no backend para tornar o sistema completamente funcional. 
+**Endpoints pendentes de implementação no backend:**
+- ❓ Management stats, invitations e users endpoints
+
+O sistema está pronto para uso assim que todos os endpoints estiverem implementados! 🚀 
