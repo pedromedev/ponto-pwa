@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import Page from '@/components/page'
 import Section from '@/components/section'
 import AuthGuard from '@/components/auth-guard'
+import { Breadcrumb } from '@/components/breadcrumb'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -124,11 +125,12 @@ const RetroativoPage = () => {
     }
   }
 
-  return (
-    <AuthGuard>
-      <Page>
-        <Section>
-          <div className="space-y-6">
+  	return (
+		<AuthGuard>
+			<Page>
+				<Section>
+					<Breadcrumb />
+					<div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className='text-2xl font-semibold text-foreground flex items-center gap-2'>

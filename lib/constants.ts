@@ -13,6 +13,20 @@ export const API_ROUTES = {
     REFRESH: '/auth/refresh',
     LOGOUT: '/auth/logout',
     PROFILE: '/auth/profile'
+  },
+  MANAGEMENT: {
+    STATS: '/organization/stats',
+    TEAMS: '/organization/1/teams',
+    TEAM: (id: number) => `/organization/1/teams/${id}`,
+    TEAM_MEMBERS: (id: number) => `/organization/1/teams/${id}/members`,
+    ADD_MEMBER: (teamId: number) => `/organization/1/teams/${teamId}/members`,
+    REMOVE_MEMBER: (teamId: number, userId: number) => `/organization/1/teams/${teamId}/members/${userId}`,
+    INVITATIONS: '/organization/1/invites',
+    INVITATION: (id: number) => `/organization/1/invite/${id}`,
+    AVAILABLE_USERS: '/organization/1/users/available',
+    REPORTS: '/reports/organization/1/monthly',
+    REPORTS_TEAM: (teamId: number) => `/reports/team/${teamId}/monthly`,
+    TEST_EMAIL: '/reports/test/monthly'
   }
 } as const
 
