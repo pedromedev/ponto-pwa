@@ -35,8 +35,8 @@ const TeamMembersModal = ({ team, isOpen, onClose, availableUsers, onUpdate }: T
   const loadTeamMembers = async () => {
     try {
       // Tenta carregar membros do backend
-      const data = await api.get<TeamMember[]>(API_ROUTES.ORGANIZATION.TEAM_MEMBERS(team.id), true)
-      setMembers(Array.isArray(data) ? data : [])
+      const data = await api.get<any>(API_ROUTES.ORGANIZATION.TEAM_MEMBERS(team.id), true)
+      setMembers(Array.isArray(data?.members) ? data.members : [])
     } catch (error) {
       console.error('Erro ao carregar membros da equipe:', error)
       
