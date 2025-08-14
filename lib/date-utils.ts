@@ -3,7 +3,8 @@ import { ptBR } from 'date-fns/locale'
 
 export const formatDate = (date: Date | string): string => {
   const dateObj = typeof date === 'string' ? new Date(date) : date
-  return format(dateObj, 'EEEE, dd \'de\' MMMM \'de\' yyyy', { locale: ptBR })
+  const dateFusoHorario = new Date(dateObj.getTime() + dateObj.getTimezoneOffset() * 60000)
+  return format(dateFusoHorario, 'EEEE, dd \'de\' MMMM \'de\' yyyy', { locale: ptBR })
 }
 
 export const formatTime = (time: Date | string | null): string => {
