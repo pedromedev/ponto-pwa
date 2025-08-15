@@ -1,3 +1,5 @@
+import { TimeEntryResponse } from '@/types/time-entry'
+
 export interface DayMarker {
   id: number
   date: Date
@@ -7,6 +9,6 @@ export interface DayMarker {
 
 export interface MonthCalendarProps {
   markers: DayMarker[]
-  onDateSelect?: (date: Date) => void
+  onNotMarkerClick?: (date: string) => void
   onMonthChange?: (date: Date) => void
 }

@@ -9,10 +9,16 @@ import {
   endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
-export const formatDate = (date: Date | string): string => {
+export const formatDateInFull= (date: Date | string): string => {
   const dateObj = typeof date === 'string' ? new Date(date) : date
   const dateFusoHorario = new Date(dateObj.getTime() + dateObj.getTimezoneOffset() * 60000)
   return format(dateFusoHorario, 'EEEE, dd \'de\' MMMM \'de\' yyyy', { locale: ptBR })
+}
+
+export const formatDateBR= (date: Date | string): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+  const dateFusoHorario = new Date(dateObj.getTime() + dateObj.getTimezoneOffset() * 60000)
+  return format(dateFusoHorario, 'dd/MM/yyyy', { locale: ptBR })
 }
 
 export const formatTime = (time: Date | string | null): string => {
@@ -29,7 +35,12 @@ export const getCurrentDateISO = (): string => {
   return format(new Date(), 'yyyy-MM-dd')
 }
 
-export const parseDate = (dateStr: string): Date | null => {
+export const getDateISO = (date: string): string => {
+  const parsed = parse(date, 'dd/MM/yyyy', new Date())
+  return format(new Date(parsed), 'yyyy-MM-dd')
+}
+
+export const parseDate = (dateStr: string | null): Date | null => {
   if (!dateStr || dateStr.length !== 10) return null
   
   try {

@@ -40,8 +40,10 @@ const Index = () => {
 		handleJustificationCancel,
 		handleJustificationChange,
 		fetchTodayTimeEntry,
+		fetchDateSelectedTimeEntry,
     	fetchTimeEntries,
-    	fetchTimeEntriesPerMonth
+    	fetchTimeEntriesPerMonth,
+		getMarkersForEntries
 	} = useTimeEntry()
 
 	// Verificar se pelo menos a entrada foi preenchida para mostrar o cálculo
@@ -78,6 +80,7 @@ const Index = () => {
 						
 						<MonthCalendar
 							markers={ markers } // todayEntry?.markers
+							onNotMarkerClick={fetchDateSelectedTimeEntry}
 						/>
 					
 

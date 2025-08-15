@@ -22,14 +22,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { redirect } from 'next/navigation'
+import { useRouter } from 'next/router'
+import { formatDateBR } from '@/lib/date-utils'
 
 export const MonthCalendar: React.FC<MonthCalendarProps> = ({
   markers = [],
-  onDateSelect,
-  onMonthChange,
+  onNotMarkerClick = () => {},
 }) => {
   const [referenceMonth, setReferencMonth]= useState(new Date()) // Usa a data atual
 
+  const router = useRouter()
   const isCurrentMonth = isSameMonth(referenceMonth, new Date())
   const monthStart = startOfMonth(referenceMonth)
   const monthEnd = endOfMonth(referenceMonth)
@@ -39,8 +42,13 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
   const daysInCalendar = eachDayOfInterval({ start: calendarStart, end: calendarEnd })
 
   const getMarkerForDate = (date: Date): DayMarker | undefined => {
-    const teste = markers.find((marker) => isSameDay(marker.date, date))
-    return teste
+    return markers.find((marker) => isSameDay(marker.date, date))
+  }
+
+  const handleMarkerClick = (date: Date) => {
+
+    const formattedDate = format(date, 'yyyy-MM-dd')
+    router.push(`/retroativo?date=${formattedDate}`)
   }
 
   const handlePreviousMonth = () => {
@@ -114,7 +122,7 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
                 <TooltipTrigger asChild>
                   <button
                     className={getDayStyles(date, marker)}
-                    onClick={() => onDateSelect?.(date)}
+                    onClick={ () => marker === undefined ? handleMarkerClick(date) : onNotMarkerClick(formatDateBR(date)) }
                     disabled={!isSameMonth(date, referenceMonth)}
                   >
                     {format(date, 'd')}

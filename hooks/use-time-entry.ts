@@ -18,9 +18,12 @@ import {
   getCurrentTime, 
   parseTimeToMinutes, 
   formatMinutesToHours,
-  calculateTimeDifference
+  calculateTimeDifference,
+  getCurrentDateISO,
+  getDateISO
 } from '@/lib/date-utils'
 import { DEFAULT_ORGANIZATION_ID, API_ROUTES, MESSAGES } from '@/lib/constants'
+import { get } from 'http'
 
 
 export const useTimeEntry = () => {
@@ -33,7 +36,7 @@ export const useTimeEntry = () => {
     lunchEnd: false,
     clockOut: false
   })
-  const [markers, setMarkers] = useState<any>([])
+  const [markers, setMarkers] = useState<DayMarker[]>([])
   const [timeEntries, setTimeEntries] = useState<TimeEntryResponse[]>([])
   const [isLoadingEntries, setIsLoadingEntries] = useState(false)
   const [todayEntry, setTodayEntry] = useState<TodayTimeEntryResponse | null>(null)
@@ -45,9 +48,45 @@ export const useTimeEntry = () => {
       fetchTodayTimeEntry()
       //fetchTimeEntries()
       fetchTimeEntriesPerMonth()
+      getMarkersForEntries()
     }
   }, [user?.id])
 
+  const getMarkersForEntries = () => {
+    const markersData = timeEntries.map(entry => {
+  
+      const hasClockIn = !!entry.clockIn;
+      const hasClockOut = !!entry.clockOut;
+      const hasLunchStart = !!entry.lunchStart;
+      const hasLunchEnd = !!entry.lunchEnd;
+  
+      let status: 'complete' | 'incomplete' | 'missing' | 'holiday';
+  
+      if (!hasClockIn && !hasClockOut && !hasLunchStart && !hasLunchEnd) {
+      status = 'missing';
+      } else if (hasClockIn && hasClockOut && hasLunchStart && hasLunchEnd) {
+      status = 'complete';
+      } else {
+      status = 'incomplete';
+      }
+  
+      const dateObj = new Date(entry.date);
+      const dateFusoHorario = new Date(dateObj.getTime() + dateObj.getTimezoneOffset() * 60000)
+
+      return {
+      id: entry.id,
+      date: dateFusoHorario,
+      status: status,
+      tooltip: status
+      };
+    
+    })
+
+    console.log("markersData:", markersData)
+    setMarkers(markersData)
+
+  }
+  
   // Buscar ponto do dia atual
   const fetchTodayTimeEntry = async (): Promise<void> => {
     if (!user?.id) return
@@ -92,6 +131,55 @@ export const useTimeEntry = () => {
     }
   }
 
+  // Buscar ponto do dia selecionado
+  const fetchDateSelectedTimeEntry = async (date: string | undefined ): Promise<void> => {
+    if (!user?.id || !date ) return
+
+    console.log(date)
+
+    try {
+      setIsLoadingToday(true)
+      console.log("dateISo:", getDateISO(date))
+      const entry = await api.get<TodayTimeEntryResponse>(API_ROUTES.TIME_ENTRY.BY_DATE(user.id, getDateISO(date)), true)
+      console.log("REtorno API BY_DATE:", entry)
+      setTodayEntry(entry)
+      
+      setFields({
+        clockIn: {
+          value: entry.clockIn ? formatTime(entry.clockIn) : null,
+          isJustified: !!entry.clockInJustification,
+          justification: entry.clockInJustification || '',
+          showJustificationForm: false
+        },
+        lunchStart: {
+          value: entry.lunchStart ? formatTime(entry.lunchStart) : null,
+          isJustified: !!entry.lunchStartJustification,
+          justification: entry.lunchStartJustification || '',
+          showJustificationForm: false
+        },
+        lunchEnd: {
+          value: entry.lunchEnd ? formatTime(entry.lunchEnd) : null,
+          isJustified: !!entry.lunchEndJustification,
+          justification: entry.lunchEndJustification || '',
+          showJustificationForm: false
+        },
+        clockOut: {
+          value: entry.clockOut ? formatTime(entry.clockOut) : null,
+          isJustified: !!entry.clockOutJustification,
+          justification: entry.clockOutJustification || '',
+          showJustificationForm: false
+        }
+      })
+    } catch (error: any) {
+      console.log(error)
+      if (error.status !== 404) {
+        toast.error(MESSAGES.ERROR.TODAY_LOAD_ERROR)
+      }
+    } finally {
+      setIsLoadingToday(false)
+    }
+  }
+
   // Buscar histórico de time entries
   const fetchTimeEntries = async (): Promise<void> => {
     if (!user?.id) return
@@ -114,8 +202,8 @@ export const useTimeEntry = () => {
 
     try {
       setIsLoadingEntries(true)
-      const marks = await api.get(API_ROUTES.TIME_ENTRY.BY_MONTH(user.id, month), true)
-      setMarkers(marks)
+      const entries = await api.get<TimeEntryResponse[]>(API_ROUTES.TIME_ENTRY.BY_MONTH(user.id, month), true)
+      setTimeEntries(entries)
     } catch (error: any) {
       toast.error(MESSAGES.ERROR.ENTRIES_LOAD_ERROR)
     } finally {
@@ -322,7 +410,9 @@ export const useTimeEntry = () => {
     handleJustificationCancel,
     handleJustificationChange,
     fetchTodayTimeEntry,
+    fetchDateSelectedTimeEntry,
     fetchTimeEntries,
-    fetchTimeEntriesPerMonth
+    fetchTimeEntriesPerMonth,
+    getMarkersForEntries
   }
 } 

@@ -14,19 +14,24 @@ import { api } from '@/lib/api'
 import { useAuth } from '@/lib/auth'
 import { CreateTimeEntryDto, FieldName, FIELD_LABELS } from '@/types/time-entry'
 import { RetroactiveFormData } from '@/types/form'
-import { parseDate, createTimeFromDateAndTime, getDayName, getCurrentDateISO } from '@/lib/date-utils'
+import { parseDate, createTimeFromDateAndTime, getDayName, getCurrentDateISO, formatDateBR, parseString } from '@/lib/date-utils'
 import { DEFAULT_ORGANIZATION_ID, API_ROUTES, MESSAGES } from '@/lib/constants'
 import { toast } from 'sonner'
 import { Calendar, Clock, Save, ArrowLeft } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
 
 
 
 const RetroativoPage = () => {
   const router = useRouter()
+  const params = useSearchParams()
   const { user } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [formData, setFormData] = useState<RetroactiveFormData>({
-    date: '',
+  const [dateParam] = useState( params.get('date') ? formatDateBR(new Date(params.get('date') || '')) : '' )
+
+  const [formData, setFormData] = useState<RetroactiveFormData>( {
+    
+    date: dateParam || '',
     clockIn: '',
     lunchStart: '',
     lunchEnd: '',
@@ -35,6 +40,7 @@ const RetroativoPage = () => {
     lunchStartJustification: '',
     lunchEndJustification: '',
     clockOutJustification: ''
+    
   })
 
 
@@ -156,7 +162,7 @@ const RetroativoPage = () => {
                 <div className="space-y-2">
                   <Label htmlFor="date">Data</Label>
                   <DatePicker
-                    value={formData.date}
+                    value={ formData.date}
                     onChange={(date) => handleInputChange('date', date)}
                     maxDate={getCurrentDateISO()}
                     placeholder="dd/mm/aaaa"
