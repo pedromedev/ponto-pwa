@@ -103,4 +103,4 @@ export const INITIAL_FIELDS_STATE: TimeEntryFields = {
   lunchStart: { ...INITIAL_FIELD_STATE },
   lunchEnd: { ...INITIAL_FIELD_STATE },
   clockOut: { ...INITIAL_FIELD_STATE }
-} 
+}

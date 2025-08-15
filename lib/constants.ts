@@ -6,7 +6,8 @@ export const API_ROUTES = {
     TODAY: (userId: number) => `/time-entry/today/${userId}`,
     USER: (userId: number) => `/time-entry/user/${userId}`,
     CREATE: '/time-entry',
-    BY_DATE: (userId: number, date: string) => `/time-entry/data/${userId}/${date}`,
+    BY_DATE: (userId: number, date: string) => `/time-entry/by-date/${userId}/${date}`,
+    BY_MONTH: (userId: number, month: number) => `/time-entry/by-month/${userId}/${month}`,
     BY_ID: (id: number) => `/time-entry/${id}`
   },
   AUTH: {

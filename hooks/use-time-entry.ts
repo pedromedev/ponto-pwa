@@ -10,6 +10,9 @@ import {
   PunchTimeDto,
   INITIAL_FIELDS_STATE
 } from '@/types/time-entry'
+
+import { DayMarker } from '@/types/calendar'
+
 import { 
   formatTime, 
   getCurrentTime, 
@@ -19,8 +22,10 @@ import {
 } from '@/lib/date-utils'
 import { DEFAULT_ORGANIZATION_ID, API_ROUTES, MESSAGES } from '@/lib/constants'
 
+
 export const useTimeEntry = () => {
   const { user } = useAuth()
+  const [month, setMonth ] = useState<number>(new Date().getMonth() + 1)
   const [fields, setFields] = useState<TimeEntryFields>(INITIAL_FIELDS_STATE)
   const [isSubmitting, setIsSubmitting] = useState<Record<FieldName, boolean>>({
     clockIn: false,
@@ -28,6 +33,7 @@ export const useTimeEntry = () => {
     lunchEnd: false,
     clockOut: false
   })
+  const [markers, setMarkers] = useState<any>([])
   const [timeEntries, setTimeEntries] = useState<TimeEntryResponse[]>([])
   const [isLoadingEntries, setIsLoadingEntries] = useState(false)
   const [todayEntry, setTodayEntry] = useState<TodayTimeEntryResponse | null>(null)
@@ -37,7 +43,8 @@ export const useTimeEntry = () => {
   useEffect(() => {
     if (user?.id) {
       fetchTodayTimeEntry()
-      fetchTimeEntries()
+      //fetchTimeEntries()
+      fetchTimeEntriesPerMonth()
     }
   }, [user?.id])
 
@@ -93,6 +100,22 @@ export const useTimeEntry = () => {
       setIsLoadingEntries(true)
       const entries = await api.get<TimeEntryResponse[]>(API_ROUTES.TIME_ENTRY.USER(user.id), true)
       setTimeEntries(entries)
+    } catch (error: any) {
+      toast.error(MESSAGES.ERROR.ENTRIES_LOAD_ERROR)
+    } finally {
+      setIsLoadingEntries(false)
+    }
+  }
+
+  // Buscar histórico de entries do usuario por mês
+  const fetchTimeEntriesPerMonth = async (): Promise<void> => {
+
+    if (!user?.id || !month ) return
+
+    try {
+      setIsLoadingEntries(true)
+      const marks = await api.get(API_ROUTES.TIME_ENTRY.BY_MONTH(user.id, month), true)
+      setMarkers(marks)
     } catch (error: any) {
       toast.error(MESSAGES.ERROR.ENTRIES_LOAD_ERROR)
     } finally {
@@ -287,6 +310,7 @@ export const useTimeEntry = () => {
   return {
     fields,
     isSubmitting,
+    markers,
     timeEntries,
     isLoadingEntries,
     todayEntry,
@@ -298,6 +322,7 @@ export const useTimeEntry = () => {
     handleJustificationCancel,
     handleJustificationChange,
     fetchTodayTimeEntry,
-    fetchTimeEntries
+    fetchTimeEntries,
+    fetchTimeEntriesPerMonth
   }
 } 

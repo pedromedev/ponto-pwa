@@ -1,8 +1,9 @@
 import React from 'react'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { DatePicker } from '@/components/ui/date-picker'
 import { TimeEntryResponse, FIELD_LABELS } from '@/types/time-entry'
-import { formatDate, formatTime, calculateTimeDifference, formatMinutesToHours } from '@/lib/date-utils'
+import { parseString, getMonthStartDateISO, getMonthStartDate, getMonthEndDate, getMonthEndDateISO, getCurrentDateISO, formatDate, formatTime, calculateTimeDifference, formatMinutesToHours } from '@/lib/date-utils'
 
 interface TimeEntriesListProps {
   timeEntries: TimeEntryResponse[]
@@ -70,6 +71,26 @@ export const TimeEntriesList: React.FC<TimeEntriesListProps> = ({
   return (
     <div className="space-y-4">
       <h3 className="text-xl font-semibold text-foreground">Histórico de Pontos</h3>
+
+      {/* Filtros */}
+      <div className="flex justify-around pb-4">
+        <div className='flex flex-col items-center space-x-2'>
+          <h4 className="font-medium text-foreground"> Data Inicial </h4>
+          <DatePicker
+            onChange={() => console.log(1)}
+            value={parseString(getMonthStartDate(getCurrentDateISO()))}
+          />
+        </div>
+        <div className='flex flex-col items-center space-x-2'>
+          <h4 className="font-medium text-foreground"> Data Final </h4>
+          <DatePicker
+            onChange={() => console.log(1)}
+            value={parseString(getMonthEndDate(getCurrentDateISO()))}
+          />
+        </div>
+      </div>
+
+      
       <div className="space-y-3">
         {timeEntries.map((entry) => (
           <Card key={entry.id} className="p-4">

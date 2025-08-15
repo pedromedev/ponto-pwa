@@ -1,18 +1,25 @@
 import React from 'react'
 import Link from 'next/link'
+import { Users, ArrowRight, Settings } from 'lucide-react'
+
+import { useAuth } from '@/lib/auth'
+
+import { FieldName } from '@/types/time-entry'
+import { DayMarker } from '@/types/calendar'
+
 import Page from '@/components/page'
 import Section from '@/components/section'
 import AuthGuard from '@/components/auth-guard'
 import { TimeFieldComponent } from '@/components/time-field-component'
 import { TimeEntriesList } from '@/components/time-entries-list'
+import { MonthCalendar } from '@/components/month-calendar'
 import { TodayTimeEntryStatus } from '@/components/today-timeentry-status'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+
 import { useTimeEntry } from '@/hooks/use-time-entry'
-import { useAuth } from '@/lib/auth'
-import { FieldName } from '@/types/time-entry'
-import { Users, ArrowRight, Settings } from 'lucide-react'
+
 
 const FIELD_ORDER: FieldName[] = ['clockIn', 'lunchStart', 'lunchEnd', 'clockOut']
 
@@ -21,6 +28,7 @@ const Index = () => {
 	const {
 		fields,
 		isSubmitting,
+		markers,
 		timeEntries,
 		isLoadingEntries,
 		todayEntry,
@@ -31,7 +39,9 @@ const Index = () => {
 		handleJustificationSubmit,
 		handleJustificationCancel,
 		handleJustificationChange,
-		fetchTodayTimeEntry
+		fetchTodayTimeEntry,
+    	fetchTimeEntries,
+    	fetchTimeEntriesPerMonth
 	} = useTimeEntry()
 
 	// Verificar se pelo menos a entrada foi preenchida para mostrar o cálculo
@@ -41,13 +51,13 @@ const Index = () => {
 		<AuthGuard>
 			<Page>
 				<Section>
-					<div className="space-y-8">
+					<div className="space-y-2">
 						<Header isLoadingToday={isLoadingToday} />
 						
-						{/* Card de acesso rápido para managers */}
+						{/* Card de acesso rápido para managers
 						{user?.role === 'MANAGER' && (
 							<ManagerQuickAccess />
-						)}
+						)} */}
 						
 						<TodayTimeEntryStatus 
 							todayEntry={todayEntry}
@@ -65,10 +75,16 @@ const Index = () => {
 							onJustificationCancel={handleJustificationCancel}
 							onJustificationChange={handleJustificationChange}
 						/>
-						<TimeEntriesList 
+						
+						<MonthCalendar
+							markers={ markers } // todayEntry?.markers
+						/>
+					
+
+						{/* <TimeEntriesList 
 							timeEntries={timeEntries}
 							isLoading={isLoadingEntries}
-						/>
+						/> */}
 					</div>
 				</Section>
 			</Page>

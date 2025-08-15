@@ -1,4 +1,12 @@
-import { format, parse, differenceInMinutes, startOfDay, setHours, setMinutes } from 'date-fns'
+import { 
+  format,
+  parse,
+  differenceInMinutes,
+  startOfDay,
+  setHours,
+  setMinutes,
+  startOfMonth,
+  endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 export const formatDate = (date: Date | string): string => {
@@ -31,6 +39,17 @@ export const parseDate = (dateStr: string): Date | null => {
   }
 }
 
+export const parseString = (dateObj: Date): String | null => {
+  if (!dateObj) return null
+
+  try{
+    return format(dateObj, 'dd/MM/yyyy')
+  } catch {
+    return null
+  }
+
+}
+
 export const parseTimeToMinutes = (timeString: string): number => {
   const [hours, minutes] = timeString.split(':').map(Number)
   return hours * 60 + minutes
@@ -59,4 +78,22 @@ export const getDayName = (date: Date | string): string => {
   if (!dateObj) return ''
   
   return format(dateObj, 'EEEE', { locale: ptBR })
-} 
+}
+
+export const getMonthStartDate = (date: Date | string): Date => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+  return startOfMonth(dateObj)
+}
+
+export const getMonthEndDate = (date: Date | string): Date => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+  return endOfMonth(dateObj)
+}
+
+export const getMonthStartDateISO = (date: Date | string): string => {
+  return format(getMonthStartDate(date), 'yyyy-MM-dd')
+}
+
+export const getMonthEndDateISO = (date: Date | string): string => {
+  return format(getMonthEndDate(date), 'yyyy-MM-dd')
+}
