@@ -9,6 +9,6 @@ export interface DayMarker {
 
 export interface MonthCalendarProps {
   markers: DayMarker[]
-  onNotMarkerClick?: (date: string) => void
+  onMarkerClick?: (date: string) => void
   onMonthChange?: (date: Date) => void
 }

@@ -20,11 +20,11 @@ import {
   formatMinutesToHours,
   calculateTimeDifference,
   getCurrentDateISO,
-  getDateISO
+  formatFusoHorario,
+  getDateISO,
+  formatTimeBR
 } from '@/lib/date-utils'
 import { DEFAULT_ORGANIZATION_ID, API_ROUTES, MESSAGES } from '@/lib/constants'
-import { get } from 'http'
-
 
 export const useTimeEntry = () => {
   const { user } = useAuth()
@@ -42,15 +42,17 @@ export const useTimeEntry = () => {
   const [todayEntry, setTodayEntry] = useState<TodayTimeEntryResponse | null>(null)
   const [isLoadingToday, setIsLoadingToday] = useState(false)
 
-  // Buscar ponto do dia e histórico quando o hook for inicializado
   useEffect(() => {
     if (user?.id) {
+      console.log("user.id:", user.id)
       fetchTodayTimeEntry()
-      //fetchTimeEntries()
       fetchTimeEntriesPerMonth()
-      getMarkersForEntries()
     }
   }, [user?.id])
+
+  useEffect(() => {
+    getMarkersForEntries()
+  }, [timeEntries])
 
   const getMarkersForEntries = () => {
     const markersData = timeEntries.map(entry => {
@@ -63,28 +65,26 @@ export const useTimeEntry = () => {
       let status: 'complete' | 'incomplete' | 'missing' | 'holiday';
   
       if (!hasClockIn && !hasClockOut && !hasLunchStart && !hasLunchEnd) {
-      status = 'missing';
+        status = 'missing';
       } else if (hasClockIn && hasClockOut && hasLunchStart && hasLunchEnd) {
-      status = 'complete';
+        status = 'complete';
       } else {
-      status = 'incomplete';
+        status = 'incomplete';
       }
   
       const dateObj = new Date(entry.date);
       const dateFusoHorario = new Date(dateObj.getTime() + dateObj.getTimezoneOffset() * 60000)
 
       return {
-      id: entry.id,
-      date: dateFusoHorario,
-      status: status,
-      tooltip: status
-      };
+        id: entry.id,
+        date: dateFusoHorario,
+        status: status,
+        tooltip: status
+      }
     
     })
 
-    console.log("markersData:", markersData)
     setMarkers(markersData)
-
   }
   
   // Buscar ponto do dia atual
@@ -98,25 +98,25 @@ export const useTimeEntry = () => {
       
       setFields({
         clockIn: {
-          value: entry.clockIn ? formatTime(entry.clockIn) : null,
+          value: entry.clockIn ? formatTimeBR(entry.clockIn) : null,
           isJustified: !!entry.clockInJustification,
           justification: entry.clockInJustification || '',
           showJustificationForm: false
         },
         lunchStart: {
-          value: entry.lunchStart ? formatTime(entry.lunchStart) : null,
+          value: entry.lunchStart ? formatTimeBR(entry.lunchStart) : null,
           isJustified: !!entry.lunchStartJustification,
           justification: entry.lunchStartJustification || '',
           showJustificationForm: false
         },
         lunchEnd: {
-          value: entry.lunchEnd ? formatTime(entry.lunchEnd) : null,
+          value: entry.lunchEnd ? formatTimeBR(entry.lunchEnd) : null,
           isJustified: !!entry.lunchEndJustification,
           justification: entry.lunchEndJustification || '',
           showJustificationForm: false
         },
         clockOut: {
-          value: entry.clockOut ? formatTime(entry.clockOut) : null,
+          value: entry.clockOut ? formatTimeBR(entry.clockOut) : null,
           isJustified: !!entry.clockOutJustification,
           justification: entry.clockOutJustification || '',
           showJustificationForm: false
@@ -133,38 +133,35 @@ export const useTimeEntry = () => {
 
   // Buscar ponto do dia selecionado
   const fetchDateSelectedTimeEntry = async (date: string | undefined ): Promise<void> => {
+    
     if (!user?.id || !date ) return
-
-    console.log(date)
 
     try {
       setIsLoadingToday(true)
-      console.log("dateISo:", getDateISO(date))
       const entry = await api.get<TodayTimeEntryResponse>(API_ROUTES.TIME_ENTRY.BY_DATE(user.id, getDateISO(date)), true)
-      console.log("REtorno API BY_DATE:", entry)
       setTodayEntry(entry)
       
       setFields({
         clockIn: {
-          value: entry.clockIn ? formatTime(entry.clockIn) : null,
+          value: entry.clockIn ? formatTimeBR(entry.clockIn) : null,
           isJustified: !!entry.clockInJustification,
           justification: entry.clockInJustification || '',
           showJustificationForm: false
         },
         lunchStart: {
-          value: entry.lunchStart ? formatTime(entry.lunchStart) : null,
+          value: entry.lunchStart ? formatTimeBR(entry.lunchStart) : null,
           isJustified: !!entry.lunchStartJustification,
           justification: entry.lunchStartJustification || '',
           showJustificationForm: false
         },
         lunchEnd: {
-          value: entry.lunchEnd ? formatTime(entry.lunchEnd) : null,
+          value: entry.lunchEnd ? formatTimeBR(entry.lunchEnd) : null,
           isJustified: !!entry.lunchEndJustification,
           justification: entry.lunchEndJustification || '',
           showJustificationForm: false
         },
         clockOut: {
-          value: entry.clockOut ? formatTime(entry.clockOut) : null,
+          value: entry.clockOut ? formatTimeBR(entry.clockOut) : null,
           isJustified: !!entry.clockOutJustification,
           justification: entry.clockOutJustification || '',
           showJustificationForm: false
@@ -204,6 +201,7 @@ export const useTimeEntry = () => {
       setIsLoadingEntries(true)
       const entries = await api.get<TimeEntryResponse[]>(API_ROUTES.TIME_ENTRY.BY_MONTH(user.id, month), true)
       setTimeEntries(entries)
+      getMarkersForEntries()
     } catch (error: any) {
       toast.error(MESSAGES.ERROR.ENTRIES_LOAD_ERROR)
     } finally {
@@ -288,23 +286,29 @@ export const useTimeEntry = () => {
 
   // Registrar ponto individual usando o novo endpoint
   const handleFieldClick = async (fieldName: FieldName): Promise<void> => {
-    if (!user?.id || fields[fieldName].isJustified || isSubmitting[fieldName]) {
+
+    const isRegistrationCompleted = Object.values(fields).every(field => field.isJustified)
+    const isFieldHasValue = fields[fieldName].value !== undefined && fields[fieldName].value !== null
+
+    if ( isFieldHasValue || isRegistrationCompleted || !user?.id || isSubmitting[fieldName] ) {
       return
     }
     
     try {
       setIsSubmitting(prev => ({ ...prev, [fieldName]: true }))
       
+      const todayDate = formatFusoHorario(new Date())
+      
       const punchData: PunchTimeDto = {
         userId: user.id,
         organizationId: DEFAULT_ORGANIZATION_ID,
         timeType: fieldName,
-        timestamp: new Date().toISOString()
+        timestamp: todayDate.toISOString()
       }
       
       await api.post(API_ROUTES.TIME_ENTRY.PUNCH, punchData, true)
       
-      const currentTime = getCurrentTime()
+      const currentTime = getCurrentTime(new Date())
       setFields(prev => ({
         ...prev,
         [fieldName]: {
@@ -316,6 +320,7 @@ export const useTimeEntry = () => {
       toast.success(MESSAGES.SUCCESS.PUNCH_REGISTERED(fieldName))
       
       await fetchTodayTimeEntry()
+      await fetchTimeEntriesPerMonth()
       
     } catch (error: any) {
       toast.error(`${MESSAGES.ERROR.PUNCH_ERROR(fieldName)}: ${error.message}`)
@@ -336,6 +341,7 @@ export const useTimeEntry = () => {
 
   // Submeter justificativa usando o novo endpoint
   const handleJustificationSubmit = async (fieldName: FieldName): Promise<void> => {
+
     if (!user?.id || !fields[fieldName].justification.trim() || isSubmitting[fieldName]) {
       toast.error(MESSAGES.ERROR.EMPTY_JUSTIFICATION)
       return
@@ -349,7 +355,7 @@ export const useTimeEntry = () => {
         organizationId: DEFAULT_ORGANIZATION_ID,
         timeType: fieldName,
         justification: fields[fieldName].justification,
-        ...(fields[fieldName].value ? {} : { timestamp: new Date().toISOString() })
+        ...(fields[fieldName].value ? {} : { timestamp: formatFusoHorario(new Date()).toISOString() })
       }
 
       await api.post(API_ROUTES.TIME_ENTRY.PUNCH, punchData, true)

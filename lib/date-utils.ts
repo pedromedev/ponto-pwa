@@ -21,14 +21,26 @@ export const formatDateBR= (date: Date | string): string => {
   return format(dateFusoHorario, 'dd/MM/yyyy', { locale: ptBR })
 }
 
+export const formatTimeBR= (date: Date | string | null): string => {
+  if (!date) return ''
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+  const dateFusoHorario = new Date(dateObj.getTime() + dateObj.getTimezoneOffset() * 60000)
+  return format(dateFusoHorario, 'HH:mm')
+}
+
+export const formatFusoHorario = (date: Date): Date => {
+  const dateFusoHorario = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+  return dateFusoHorario
+}
+
 export const formatTime = (time: Date | string | null): string => {
   if (!time) return '--:--'
   const dateObj = typeof time === 'string' ? new Date(time) : time
   return format(dateObj, 'HH:mm')
 }
 
-export const getCurrentTime = (): string => {
-  return format(new Date(), 'HH:mm')
+export const getCurrentTime = (date?: Date): string => {
+  return format(date || new Date(), 'HH:mm')
 }
 
 export const getCurrentDateISO = (): string => {
@@ -77,7 +89,7 @@ export const formatMinutesToHours = (totalMinutes: number): string => {
 
 export const createTimeFromDateAndTime = (date: Date, timeString: string): Date => {
   const [hours, minutes] = timeString.split(':').map(Number)
-  return setMinutes(setHours(startOfDay(date), hours), minutes)
+  return formatFusoHorario(setMinutes(setHours(startOfDay(date), hours), minutes))
 }
 
 export const calculateTimeDifference = (start: Date, end: Date): number => {

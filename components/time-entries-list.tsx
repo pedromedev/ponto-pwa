@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DatePicker } from '@/components/ui/date-picker'
 import { TimeEntryResponse, FIELD_LABELS } from '@/types/time-entry'
-import { parseString, getMonthStartDateISO, getMonthStartDate, getMonthEndDate, getMonthEndDateISO, getCurrentDateISO, formatDate, formatTime, calculateTimeDifference, formatMinutesToHours } from '@/lib/date-utils'
+import { formatDateBR, formatTime, calculateTimeDifference, formatMinutesToHours, formatTimeBR } from '@/lib/date-utils'
 
 interface TimeEntriesListProps {
   timeEntries: TimeEntryResponse[]
@@ -69,35 +69,35 @@ export const TimeEntriesList: React.FC<TimeEntriesListProps> = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 py-8">
       <h3 className="text-xl font-semibold text-foreground">Histórico de Pontos</h3>
 
-      {/* Filtros */}
+      {/* Filtros
       <div className="flex justify-around pb-4">
         <div className='flex flex-col items-center space-x-2'>
           <h4 className="font-medium text-foreground"> Data Inicial </h4>
           <DatePicker
             onChange={() => console.log(1)}
-            value={parseString(getMonthStartDate(getCurrentDateISO()))}
+            value={}
           />
         </div>
         <div className='flex flex-col items-center space-x-2'>
           <h4 className="font-medium text-foreground"> Data Final </h4>
           <DatePicker
             onChange={() => console.log(1)}
-            value={parseString(getMonthEndDate(getCurrentDateISO()))}
+            value={}
           />
         </div>
-      </div>
+      </div> */}
 
       
-      <div className="space-y-3">
+      <div className="space-y-3 max-h-60 overflow-auto">
         {timeEntries.map((entry) => (
           <Card key={entry.id} className="p-4">
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <h4 className="font-medium text-foreground">
-                  {formatDate(entry.date)}
+                  {formatDateBR(entry.date)}
                 </h4>
                 <span className="text-sm font-medium text-muted-foreground">
                   Horas trabalhadas: {calculateWorkedHours(entry)}
@@ -107,22 +107,22 @@ export const TimeEntriesList: React.FC<TimeEntriesListProps> = ({
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <TimeSlot
                   label={FIELD_LABELS.clockIn}
-                  time={formatTime(entry.clockIn)}
+                  time={formatTimeBR(entry.clockIn)}
                   justification={entry.clockInJustification}
                 />
                 <TimeSlot
                   label={FIELD_LABELS.lunchStart}
-                  time={formatTime(entry.lunchStart)}
+                  time={formatTimeBR(entry.lunchStart)}
                   justification={entry.lunchStartJustification}
                 />
                 <TimeSlot
                   label={FIELD_LABELS.lunchEnd}
-                  time={formatTime(entry.lunchEnd)}
+                  time={formatTimeBR(entry.lunchEnd)}
                   justification={entry.lunchEndJustification}
                 />
                 <TimeSlot
                   label={FIELD_LABELS.clockOut}
-                  time={formatTime(entry.clockOut)}
+                  time={formatTimeBR(entry.clockOut)}
                   justification={entry.clockOutJustification}
                 />
               </div>

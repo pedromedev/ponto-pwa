@@ -5,13 +5,11 @@ import { Users, ArrowRight, Settings } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 
 import { FieldName } from '@/types/time-entry'
-import { DayMarker } from '@/types/calendar'
 
 import Page from '@/components/page'
 import Section from '@/components/section'
 import AuthGuard from '@/components/auth-guard'
 import { TimeFieldComponent } from '@/components/time-field-component'
-import { TimeEntriesList } from '@/components/time-entries-list'
 import { MonthCalendar } from '@/components/month-calendar'
 import { TodayTimeEntryStatus } from '@/components/today-timeentry-status'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -79,8 +77,8 @@ const Index = () => {
 						/>
 						
 						<MonthCalendar
-							markers={ markers } // todayEntry?.markers
-							onNotMarkerClick={fetchDateSelectedTimeEntry}
+							markers={markers} // todayEntry?.markers
+							onMarkerClick={fetchDateSelectedTimeEntry}
 						/>
 					
 
