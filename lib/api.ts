@@ -128,6 +128,14 @@ export const api = {
     })
   },
 
+  patch<T>(endpoint: string, data?: any, requireAuth = false): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+      requireAuth,
+    })
+  },
+
   delete<T>(endpoint: string, requireAuth = false): Promise<T> {
     return this.request<T>(endpoint, { method: 'DELETE', requireAuth })
   },

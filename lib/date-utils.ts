@@ -15,6 +15,11 @@ export const formatDateInFull= (date: Date | string): string => {
   return format(dateFusoHorario, 'EEEE, dd \'de\' MMMM \'de\' yyyy', { locale: ptBR })
 }
 
+export const formatDate= (date: Date | string): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+  return format(dateObj, 'dd/MM/yyyy', { locale: ptBR })
+}
+
 export const formatDateBR= (date: Date | string): string => {
   const dateObj = typeof date === 'string' ? new Date(date) : date
   const dateFusoHorario = new Date(dateObj.getTime() + dateObj.getTimezoneOffset() * 60000)
@@ -24,8 +29,7 @@ export const formatDateBR= (date: Date | string): string => {
 export const formatTimeBR= (date: Date | string | null): string => {
   if (!date) return ''
   const dateObj = typeof date === 'string' ? new Date(date) : date
-  const dateFusoHorario = new Date(dateObj.getTime() + dateObj.getTimezoneOffset() * 60000)
-  return format(dateFusoHorario, 'HH:mm')
+  return format(dateObj, 'HH:mm')
 }
 
 export const formatFusoHorario = (date: Date): Date => {
@@ -62,7 +66,7 @@ export const parseDate = (dateStr: string | null): Date | null => {
   }
 }
 
-export const parseString = (dateObj: Date): String | null => {
+export const parseString = (dateObj: Date | null): String | null => {
   if (!dateObj) return null
 
   try{
@@ -89,7 +93,7 @@ export const formatMinutesToHours = (totalMinutes: number): string => {
 
 export const createTimeFromDateAndTime = (date: Date, timeString: string): Date => {
   const [hours, minutes] = timeString.split(':').map(Number)
-  return formatFusoHorario(setMinutes(setHours(startOfDay(date), hours), minutes))
+  return setMinutes(setHours(startOfDay(date), hours), minutes)
 }
 
 export const calculateTimeDifference = (start: Date, end: Date): number => {
@@ -97,9 +101,10 @@ export const calculateTimeDifference = (start: Date, end: Date): number => {
 }
 
 export const getDayName = (date: Date | string): string => {
+
   const dateObj = typeof date === 'string' ? parseDate(date) : date
   if (!dateObj) return ''
-  
+
   return format(dateObj, 'EEEE', { locale: ptBR })
 }
 

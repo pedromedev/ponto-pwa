@@ -18,7 +18,7 @@ import { TimeEntriesList } from '@/components/time-entries-list'
 
 import { api } from '@/lib/api'
 import { useAuth } from '@/lib/auth'
-import { parseDate, createTimeFromDateAndTime, getDayName, getCurrentDateISO, formatDateBR, getDateISO, formatTime, formatTimeBR } from '@/lib/date-utils'
+import { parseDate, createTimeFromDateAndTime, getDayName, getCurrentDateISO, getDateISO, formatTime, formatTimeBR, parseString } from '@/lib/date-utils'
 import { DEFAULT_ORGANIZATION_ID, API_ROUTES, MESSAGES } from '@/lib/constants'
 
 import { toast } from 'sonner'
@@ -26,7 +26,7 @@ import { Calendar, Clock, Save, ArrowLeft } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 
 import { useTimeEntry } from '@/hooks/use-time-entry'
-
+import { format } from 'date-fns'
 
 const RetroativoPage = () => {
 
@@ -36,12 +36,11 @@ const RetroativoPage = () => {
   const params = useSearchParams()
 
   const [ isSubmitting, setIsSubmitting ] = useState(false)
-  const [ dateParam, setDateParam ] = useState( params.get('date') ? formatDateBR(new Date(params.get('date') || '')) : '' )
+  const [ dateParam, setDateParam ] = useState( params.get('date') )
   const [ entry, setEntry ] = useState<TimeEntryResponse>()
 
-  const [formData, setFormData] = useState<RetroactiveFormData>( {
-    
-    date: dateParam || '',
+  const [formData, setFormData] = useState<RetroactiveFormData>({
+    date: '',
     clockIn: '',
     lunchStart: '',
     lunchEnd: '',
@@ -50,71 +49,92 @@ const RetroativoPage = () => {
     lunchStartJustification: '',
     lunchEndJustification: '',
     clockOutJustification: ''
-    
   })
 
-  useEffect(() => {
-    if (timeEntries.length > 0 && dateParam) {
-      const timeEntriesFiltred = timeEntries.filter(entry => entry.date.split('T')[0] === getDateISO(dateParam))
-      if (timeEntriesFiltred.length > 0) {
-        const foundEntry = timeEntriesFiltred[0]
-        setEntry(foundEntry)
-        
-        // Também atualizar o formData com os dados do entry encontrado
-        setFormData(prev => ({
-          ...prev,
-          clockIn: formatTime(foundEntry.clockIn )|| '',
-          lunchStart: formatTime(foundEntry.lunchStart) || '',
-          lunchEnd: formatTime(foundEntry.lunchEnd) || '',
-          clockOut: formatTime(foundEntry.clockOut) || '',
-          clockInJustification: foundEntry.clockInJustification || '',
-          lunchStartJustification: foundEntry.lunchStartJustification || '',
-          lunchEndJustification: foundEntry.lunchEndJustification || '',
-          clockOutJustification: foundEntry.clockOutJustification || ''
-        }))
-      }
-    }
-  }, [timeEntries, dateParam])
-
-  const handleDateChange = (value: string) => {
-
-    setFormData(prev => ({
-      ...prev,
-      ['date']: value
-    }))
-
-    const timeEntriesFiltred = timeEntries.filter(entry => entry.date.split('T')[0] === getDateISO(value))
-    if (timeEntriesFiltred.length === 0) {
-      setEntry(undefined)
-      setFormData(prev => ({
-        ...prev,
-        clockIn: '',
-        lunchStart: '',
-        lunchEnd: '',
-        clockOut: '',
-        clockInJustification: '',
-        lunchStartJustification: '',
-        lunchEndJustification: '',
-        clockOutJustification: ''
-      }))
-      return
-    }
-    
-    const foundEntry = timeEntriesFiltred[0]
+  // preencher campos com entry selecionado
+  const initializeFormWithEntry = (foundEntry: TimeEntryResponse, dateStr: string) => {
     setEntry(foundEntry)
-
     setFormData(prev => ({
       ...prev,
-      clockIn: formatTimeBR(foundEntry.clockIn )|| '',
-      lunchStart: formatTimeBR(foundEntry.lunchStart) || '',
-      lunchEnd: formatTimeBR(foundEntry.lunchEnd) || '',
-      clockOut: formatTimeBR(foundEntry.clockOut) || '',
+      date: dateStr,
+      clockIn: formatTime(foundEntry.clockIn) || '',
+      lunchStart: formatTime(foundEntry.lunchStart) || '',
+      lunchEnd: formatTime(foundEntry.lunchEnd) || '',
+      clockOut: foundEntry.clockOut ? formatTime(foundEntry.clockOut) : '',
       clockInJustification: foundEntry.clockInJustification || '',
       lunchStartJustification: foundEntry.lunchStartJustification || '',
       lunchEndJustification: foundEntry.lunchEndJustification || '',
       clockOutJustification: foundEntry.clockOutJustification || ''
     }))
-    
+  }
+
+  // inicialização com parâmetro de URL
+  useEffect(() => {
+
+    if (dateParam) {
+      try {
+        const date = new Date(dateParam)
+        date.setMinutes(date.getMinutes() + date.getTimezoneOffset())
+
+        const formattedDate = format(date, 'dd/MM/yyyy')
+        const dateISO = getDateISO(formattedDate)
+        
+        const timeEntriesFiltered = timeEntries.filter(entry => 
+          entry.date.split('T')[0] === dateISO
+        )
+        
+        if (timeEntriesFiltered.length > 0) {
+          initializeFormWithEntry(timeEntriesFiltered[0], formattedDate)
+        } else {
+          // Se não encontrar entry, pelo menos definir a data
+          setFormData(prev => ({
+            ...prev,
+            date: formattedDate
+          }))
+        }
+      } catch (error) {
+        console.error('Erro ao processar dateParam:', error)
+      }
+    }
+  }, [timeEntries, dateParam])
+
+  const handleDateChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      date: value,
+    }))
+
+    try {
+      const dateISO = getDateISO(value)
+      const timeEntriesFiltered = timeEntries.filter(entry => 
+        entry.date.split('T')[0] === dateISO
+      )
+      
+      if (timeEntriesFiltered.length === 0) {
+        // Limpar entry e campos de tempo, mas manter a data
+        setEntry(undefined)
+        setFormData(prev => ({
+          ...prev,
+          date: value, // Manter a data selecionada
+          clockIn: '',
+          lunchStart: '',
+          lunchEnd: '',
+          clockOut: '',
+          clockInJustification: '',
+          lunchStartJustification: '',
+          lunchEndJustification: '',
+          clockOutJustification: ''
+        }))
+        return
+      }
+      
+      const foundEntry = timeEntriesFiltered[0]
+      initializeFormWithEntry(foundEntry, value)
+      
+    } catch (error) {
+      console.error('Erro ao processar mudança de data:', error)
+      toast.error('Erro ao processar a data selecionada')
+    }
   }
 
   const handleInputChange = (field: keyof RetroactiveFormData, value: string) => {
@@ -179,14 +199,16 @@ const RetroativoPage = () => {
         }
       }
 
+
       if (entry === undefined) {
         await api.post(API_ROUTES.TIME_ENTRY.CREATE, timeEntryData, true)
       } else {
-        await api.put(API_ROUTES.TIME_ENTRY.BY_ID(entry.id), timeEntryData, true)
+        console.log(entry)
+        await api.patch(API_ROUTES.TIME_ENTRY.BY_ID(entry.id), timeEntryData, true)
       }     
 
       toast.success(MESSAGES.SUCCESS.RETROACTIVE_SAVED)
-      fetchTimeEntriesPerMonth()
+      await fetchTimeEntriesPerMonth()
       
       // Limpar formulário
       setFormData({
@@ -200,20 +222,22 @@ const RetroativoPage = () => {
         lunchEndJustification: '',
         clockOutJustification: ''
       })
+      setEntry(undefined)
 
     } catch (error: any) {
+      console.error('Erro no submit:', error)
       toast.error(error.message || MESSAGES.ERROR.RETROACTIVE_ERROR)
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  	return (
-		<AuthGuard>
-			<Page>
-				<Section>
-					<Breadcrumb />
-					<div className="space-y-6">
+  return (
+    <AuthGuard>
+      <Page>
+        <Section>
+          <Breadcrumb />
+          <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className='text-2xl font-semibold text-foreground flex items-center gap-2'>
@@ -239,7 +263,7 @@ const RetroativoPage = () => {
                 <div className="space-y-2">
                   <Label htmlFor="date">Data</Label>
                   <DatePicker
-                    value={ formData.date}
+                    value={formData.date}
                     onChange={(date) => handleDateChange(date)}
                     maxDate={getCurrentDateISO()}
                     placeholder="dd/mm/aaaa"
@@ -302,7 +326,6 @@ const RetroativoPage = () => {
             </Card>
           </div>
           <TimeEntriesList
-            timeEntries={timeEntries}
             isLoading={false}
           />
         </Section>
@@ -311,4 +334,4 @@ const RetroativoPage = () => {
   )
 }
 
-export default RetroativoPage 
+export default RetroativoPage

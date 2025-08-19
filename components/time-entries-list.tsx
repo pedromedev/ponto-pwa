@@ -1,36 +1,20 @@
 import React from 'react'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { DatePicker } from '@/components/ui/date-picker'
 import { TimeEntryResponse, FIELD_LABELS } from '@/types/time-entry'
-import { formatDateBR, formatTime, calculateTimeDifference, formatMinutesToHours, formatTimeBR } from '@/lib/date-utils'
+import { formatDateBR, formatTime, calculateTimeDifference, formatMinutesToHours, formatTimeBR, formatDate, getDayName } from '@/lib/date-utils'
+
+import { useTimeEntry } from '@/hooks/use-time-entry'
 
 interface TimeEntriesListProps {
-  timeEntries: TimeEntryResponse[]
   isLoading: boolean
 }
 
 export const TimeEntriesList: React.FC<TimeEntriesListProps> = ({
-  timeEntries,
   isLoading
 }) => {
-  const calculateWorkedHours = (entry: TimeEntryResponse) => {
-    if (!entry.clockIn || !entry.clockOut) return '--'
-    
-    const clockIn = new Date(entry.clockIn)
-    const clockOut = new Date(entry.clockOut)
-    const lunchStart = entry.lunchStart ? new Date(entry.lunchStart) : null
-    const lunchEnd = entry.lunchEnd ? new Date(entry.lunchEnd) : null
-    
-    let totalMinutes = calculateTimeDifference(clockIn, clockOut)
-    
-    if (lunchStart && lunchEnd) {
-      const lunchMinutes = calculateTimeDifference(lunchStart, lunchEnd)
-      totalMinutes -= lunchMinutes
-    }
-    
-    return formatMinutesToHours(totalMinutes)
-  }
+
+  const { timeEntries, calculateWorkedHours } = useTimeEntry()
 
   if (isLoading) {
     return (
@@ -97,7 +81,7 @@ export const TimeEntriesList: React.FC<TimeEntriesListProps> = ({
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <h4 className="font-medium text-foreground">
-                  {formatDateBR(entry.date)}
+                  {getDayName(entry.date) + formatDateBR(entry.date)}
                 </h4>
                 <span className="text-sm font-medium text-muted-foreground">
                   Horas trabalhadas: {calculateWorkedHours(entry)}
@@ -107,22 +91,22 @@ export const TimeEntriesList: React.FC<TimeEntriesListProps> = ({
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <TimeSlot
                   label={FIELD_LABELS.clockIn}
-                  time={formatTimeBR(entry.clockIn)}
+                  time={formatTime(entry.clockIn)}
                   justification={entry.clockInJustification}
                 />
                 <TimeSlot
                   label={FIELD_LABELS.lunchStart}
-                  time={formatTimeBR(entry.lunchStart)}
+                  time={formatTime(entry.lunchStart)}
                   justification={entry.lunchStartJustification}
                 />
                 <TimeSlot
                   label={FIELD_LABELS.lunchEnd}
-                  time={formatTimeBR(entry.lunchEnd)}
+                  time={formatTime(entry.lunchEnd)}
                   justification={entry.lunchEndJustification}
                 />
                 <TimeSlot
                   label={FIELD_LABELS.clockOut}
-                  time={formatTimeBR(entry.clockOut)}
+                  time={formatTime(entry.clockOut)}
                   justification={entry.clockOutJustification}
                 />
               </div>

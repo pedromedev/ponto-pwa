@@ -48,7 +48,7 @@ export const useTimeEntry = () => {
       fetchTodayTimeEntry()
       fetchTimeEntriesPerMonth()
     }
-  }, [user?.id])
+  }, [])
 
   useEffect(() => {
     getMarkersForEntries()
@@ -209,6 +209,23 @@ export const useTimeEntry = () => {
     }
   }
 
+  const calculateWorkedHours = (entry: TimeEntryResponse) => {
+    if (!entry.clockIn || !entry.clockOut) return '--'
+    
+    const clockIn = new Date(entry.clockIn)
+    const clockOut = new Date(entry.clockOut)
+    const lunchStart = entry.lunchStart ? new Date(entry.lunchStart) : null
+    const lunchEnd = entry.lunchEnd ? new Date(entry.lunchEnd) : null
+    
+    let totalMinutes = calculateTimeDifference(clockIn, clockOut)
+    
+    if (lunchStart && lunchEnd) {
+      const lunchMinutes = calculateTimeDifference(lunchStart, lunchEnd)
+      totalMinutes -= lunchMinutes
+    }
+    
+    return formatMinutesToHours(totalMinutes)
+  }
 
 
   const calculateCurrentWorkedHours = (): { 
@@ -297,7 +314,7 @@ export const useTimeEntry = () => {
     try {
       setIsSubmitting(prev => ({ ...prev, [fieldName]: true }))
       
-      const todayDate = formatFusoHorario(new Date())
+      const todayDate = new Date()
       
       const punchData: PunchTimeDto = {
         userId: user.id,
@@ -410,6 +427,7 @@ export const useTimeEntry = () => {
     todayEntry,
     isLoadingToday,
     currentWorkedHours: calculateCurrentWorkedHours(),
+    calculateWorkedHours,
     handleFieldClick,
     handleJustifyClick,
     handleJustificationSubmit,
