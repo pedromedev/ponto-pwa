@@ -27,6 +27,7 @@ import { useSearchParams } from 'next/navigation'
 
 import { useTimeEntry } from '@/hooks/use-time-entry'
 import { format } from 'date-fns'
+import { JustificationSelect } from '@/components/ui/select'
 
 const RetroativoPage = () => {
 
@@ -232,6 +233,23 @@ const RetroativoPage = () => {
     }
   }
 
+  const justificationOptions = [
+    'Licença maternidade/paternidade',
+    'Licença casamento',
+    'Licença luto',
+    'Doação de sangue',
+    'Convocação judicial/militar',
+    'Atestado médico',
+    'Consulta médica/odontológica',
+    'Doença em família',
+    'Falecimento de familiar',
+    'Atraso de transporte público/trânsito',
+    'Compromisso pessoal previamente autorizado',
+    'Compromisso acadêmico (prova, aula, etc.)',
+    'Home office (quando não estava previsto)',
+    'Férias'
+  ];
+
   return (
     <AuthGuard>
       <Page>
@@ -293,13 +311,13 @@ const RetroativoPage = () => {
 
                       <div className="space-y-2">
                         <Label htmlFor={`${fieldName}Justification`}>Justificativa (opcional)</Label>
-                        <Input
-                          id={`${fieldName}Justification`}
-                          type="text"
-                          placeholder="Ex: Esqueci de registrar o ponto"
-                          value={formData[`${fieldName}Justification` as keyof RetroactiveFormData]}
-                          onChange={(e) => handleInputChange(`${fieldName}Justification` as keyof RetroactiveFormData, e.target.value)}
-                        />
+
+                        <JustificationSelect
+                            value={formData[`${fieldName}Justification` as keyof RetroactiveFormData]}
+                            onChange={(value) => handleInputChange(`${fieldName}Justification` as keyof RetroactiveFormData, value)}
+                            disabled={isSubmitting}
+                          />
+
                       </div>
                     </div>
                   ))}

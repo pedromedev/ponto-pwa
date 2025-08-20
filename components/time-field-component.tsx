@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { TimeField, FieldName, FIELD_LABELS } from '@/types/time-entry'
 import { Loader2 } from 'lucide-react'
+import { JustificationSelect } from './ui/select'
 
 interface TimeFieldComponentProps {
   fieldName: FieldName
@@ -106,19 +107,13 @@ export const TimeFieldComponent: React.FC<TimeFieldComponentProps> = ({
           <label className="text-sm font-medium text-foreground">
             Justificar {label}
           </label>
-          <select
-            value={field.justification}
-            onChange={(e) => onJustificationChange(fieldName, e.target.value)}
-            className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-1 focus:ring-ring bg-background"
-            disabled={isSubmitting}
-          >
-            <option value="">Selecione uma justificativa...</option>
-            {justificationOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
+
+           <JustificationSelect
+              value={field.justification}
+              onChange={(value) => onJustificationChange(fieldName, value)}
+              disabled={isSubmitting}
+            />
+
           <div className="flex gap-2 justify-end">
             <Button
               type="button"
