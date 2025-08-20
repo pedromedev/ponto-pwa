@@ -25,7 +25,24 @@ export const TimeFieldComponent: React.FC<TimeFieldComponentProps> = ({
   onJustificationCancel,
   onJustificationChange
 }) => {
+
   const label = FIELD_LABELS[fieldName]
+  const justificationOptions = [
+    'Licença maternidade/paternidade',
+    'Licença casamento',
+    'Licença luto',
+    'Doação de sangue',
+    'Convocação judicial/militar',
+    'Atestado médico',
+    'Consulta médica/odontológica',
+    'Doença em família',
+    'Falecimento de familiar',
+    'Atraso de transporte público/trânsito',
+    'Compromisso pessoal previamente autorizado',
+    'Compromisso acadêmico (prova, aula, etc.)',
+    'Home office (quando não estava previsto)',
+    'Férias'
+  ];
 
   return (
     <div className="space-y-2">
@@ -89,13 +106,19 @@ export const TimeFieldComponent: React.FC<TimeFieldComponentProps> = ({
           <label className="text-sm font-medium text-foreground">
             Justificar {label}
           </label>
-          <textarea
+          <select
             value={field.justification}
             onChange={(e) => onJustificationChange(fieldName, e.target.value)}
-            placeholder="Digite sua justificativa..."
-            className="w-full min-h-[80px] px-3 py-2 border border-input rounded-md resize-none focus:outline-none focus:ring-1 focus:ring-ring bg-background"
+            className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-1 focus:ring-ring bg-background"
             disabled={isSubmitting}
-          />
+          >
+            <option value="">Selecione uma justificativa...</option>
+            {justificationOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
           <div className="flex gap-2 justify-end">
             <Button
               type="button"

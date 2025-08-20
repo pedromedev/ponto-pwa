@@ -2,8 +2,6 @@ import React from 'react'
 import Link from 'next/link'
 import { Users, ArrowRight, Settings } from 'lucide-react'
 
-import { useAuth } from '@/lib/auth'
-
 import { FieldName } from '@/types/time-entry'
 
 import Page from '@/components/page'
@@ -22,13 +20,11 @@ import { useTimeEntry } from '@/hooks/use-time-entry'
 const FIELD_ORDER: FieldName[] = ['clockIn', 'lunchStart', 'lunchEnd', 'clockOut']
 
 const Index = () => {
-	const { user } = useAuth()
+
 	const {
 		fields,
 		isSubmitting,
 		markers,
-		timeEntries,
-		isLoadingEntries,
 		todayEntry,
 		isLoadingToday,
 		currentWorkedHours,
@@ -37,11 +33,7 @@ const Index = () => {
 		handleJustificationSubmit,
 		handleJustificationCancel,
 		handleJustificationChange,
-		fetchTodayTimeEntry,
 		fetchDateSelectedTimeEntry,
-    	fetchTimeEntries,
-    	fetchTimeEntriesPerMonth,
-		getMarkersForEntries
 	} = useTimeEntry()
 
 	// Verificar se pelo menos a entrada foi preenchida para mostrar o cálculo
