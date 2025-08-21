@@ -7,14 +7,16 @@ import { formatDateBR, formatTime, calculateTimeDifference, formatMinutesToHours
 import { useTimeEntry } from '@/hooks/use-time-entry'
 
 interface TimeEntriesListProps {
+  timeEntries: TimeEntryResponse[],
   isLoading: boolean
 }
 
 export const TimeEntriesList: React.FC<TimeEntriesListProps> = ({
+  timeEntries,
   isLoading
 }) => {
 
-  const { timeEntries, calculateWorkedHours } = useTimeEntry()
+  const { calculateWorkedHours } = useTimeEntry()
 
   if (isLoading) {
     return (

@@ -9,7 +9,6 @@ import Section from '@/components/section'
 import AuthGuard from '@/components/auth-guard'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 import { DatePicker } from '@/components/ui/date-picker'
@@ -32,7 +31,7 @@ import { JustificationSelect } from '@/components/ui/select'
 const RetroativoPage = () => {
 
   const { user } = useAuth()
-  const { timeEntries, fetchTimeEntriesPerMonth } = useTimeEntry()
+  const { timeEntries, setTimeEntries } = useTimeEntry()
   const router = useRouter()
   const params = useSearchParams()
 
@@ -54,6 +53,12 @@ const RetroativoPage = () => {
 
   // preencher campos com entry selecionado
   const initializeFormWithEntry = (foundEntry: TimeEntryResponse, dateStr: string) => {
+    
+    if (foundEntry.clockIn && foundEntry.lunchStart && foundEntry.lunchEnd && foundEntry.clockOut) {
+      toast.error('Não é possível modificar um registro já completo')
+      return
+    }
+
     setEntry(foundEntry)
     setFormData(prev => ({
       ...prev,
@@ -200,16 +205,18 @@ const RetroativoPage = () => {
         }
       }
 
-
+      let response: TimeEntryResponse
       if (entry === undefined) {
-        await api.post(API_ROUTES.TIME_ENTRY.CREATE, timeEntryData, true)
+        response = await api.post(API_ROUTES.TIME_ENTRY.CREATE, timeEntryData, true)
+        setTimeEntries([...timeEntries, response])
       } else {
-        console.log(entry)
-        await api.patch(API_ROUTES.TIME_ENTRY.BY_ID(entry.id), timeEntryData, true)
+        response = await api.patch(API_ROUTES.TIME_ENTRY.BY_ID(entry.id), timeEntryData, true)
+        setTimeEntries(timeEntries.map(timeEntry => 
+          timeEntry.id === entry.id ? response : timeEntry
+        ))
       }     
 
       toast.success(MESSAGES.SUCCESS.RETROACTIVE_SAVED)
-      await fetchTimeEntriesPerMonth()
       
       // Limpar formulário
       setFormData({
@@ -223,7 +230,11 @@ const RetroativoPage = () => {
         lunchEndJustification: '',
         clockOutJustification: ''
       })
+
+      
       setEntry(undefined)
+      setDateParam('')
+
 
     } catch (error: any) {
       console.error('Erro no submit:', error)
@@ -232,23 +243,6 @@ const RetroativoPage = () => {
       setIsSubmitting(false)
     }
   }
-
-  const justificationOptions = [
-    'Licença maternidade/paternidade',
-    'Licença casamento',
-    'Licença luto',
-    'Doação de sangue',
-    'Convocação judicial/militar',
-    'Atestado médico',
-    'Consulta médica/odontológica',
-    'Doença em família',
-    'Falecimento de familiar',
-    'Atraso de transporte público/trânsito',
-    'Compromisso pessoal previamente autorizado',
-    'Compromisso acadêmico (prova, aula, etc.)',
-    'Home office (quando não estava previsto)',
-    'Férias'
-  ];
 
   return (
     <AuthGuard>
@@ -344,6 +338,7 @@ const RetroativoPage = () => {
             </Card>
           </div>
           <TimeEntriesList
+            timeEntries={timeEntries}
             isLoading={false}
           />
         </Section>

@@ -427,6 +427,7 @@ export const useTimeEntry = () => {
     todayEntry,
     isLoadingToday,
     currentWorkedHours: calculateCurrentWorkedHours(),
+    setTimeEntries,
     calculateWorkedHours,
     handleFieldClick,
     handleJustifyClick,
