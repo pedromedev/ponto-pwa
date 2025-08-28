@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { api } from './api'
 import { User, AuthContextType } from '@/types/user'
+import { useRouter } from 'next/router'
+import { useLoginFormStore } from '@/stores/login'
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -11,6 +13,8 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const { setError } = useLoginFormStore()
+  const router = useRouter()
 
   // Verificar se o usuário está logado ao carregar a aplicação
   useEffect(() => {
@@ -53,10 +57,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Salvar dados do usuário
       localStorage.setItem('user-data', JSON.stringify(userData))
       setUser(userData)
+
+      router.push('/')
       
       return true
     } catch (error) {
       console.error('Erro durante o login:', error)
+      setError(`${error.message}`)
       return false
     } finally {
       setIsLoading(false)
@@ -104,7 +111,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(null)
       
       // Redirecionar para login
-      window.location.href = '/auth/login'
+      router.push('/auth/login')
     }
   }
 

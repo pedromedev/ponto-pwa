@@ -5,6 +5,11 @@ export interface User {
   role?: 'MANAGER' | 'MEMBER'
 }
 
+export interface LoginCredentials {
+  email: string
+  password: string
+}
+
 export interface AuthContextType {
   user: User | null
   isLoading: boolean

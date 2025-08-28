@@ -44,7 +44,6 @@ export const useTimeEntry = () => {
 
   useEffect(() => {
     if (user?.id) {
-      console.log("user.id:", user.id)
       fetchTodayTimeEntry()
       fetchTimeEntriesPerMonth()
     }

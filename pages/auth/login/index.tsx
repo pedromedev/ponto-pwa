@@ -1,35 +1,47 @@
 import AuthLayout from '../layout'
-import { ReactElement, useState } from 'react'
+import { ReactElement, useEffect } from 'react'
 import type { NextPageWithLayout } from '../../_app'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
+
+import { useLoginFormStore } from "@/stores/login"
 import { useAuth } from '@/lib/auth'
-import { useRouter } from 'next/router'
 
 const Login: NextPageWithLayout = () => {
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [error, setError] = useState('')
-    const { login, isLoading } = useAuth()
-    const router = useRouter()
+
+    const { login } = useAuth()
+    const { 
+        email, 
+        password, 
+        isSubmitting, 
+        error,
+        
+        setEmail, 
+        setPassword, 
+        setError,
+        setSubmitting,
+        clearForm 
+    } = useLoginFormStore() // Estado do formulário
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        setError('')
+        setSubmitting(true)
 
-        if (!email || !password) {
-            setError('Por favor, preencha todos os campos')
-            return
-        }
-
-        const success = await login(email, password)
-        if (success) {
-            router.push('/')
-        } else {
-            setError('Email ou senha inválidos')
+        try {
+            const result = await login(email, password)
+            if(result) clearForm()
+            // Redirecionar ou mostrar sucesso
+        } catch (err) {
+            // Tratar erro
+            setError(`${err.message}`)
+            console.error('Erro durante o login:', error)
+        } finally {
+            setSubmitting(false)
         }
     }
 
@@ -43,7 +55,7 @@ const Login: NextPageWithLayout = () => {
             </CardHeader>
             <CardContent className="space-y-4">
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    {error && (
+                    {error !== null && (
                         <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
                             {error}
                         </div>
@@ -76,9 +88,9 @@ const Login: NextPageWithLayout = () => {
                         type="submit" 
                         className="w-full" 
                         size="lg"
-                        disabled={isLoading}
+                        disabled={isSubmitting}
                     >
-                        {isLoading ? 'Entrando...' : 'Entrar'}
+                        {isSubmitting ? 'Entrando...' : 'Entrar'}
                     </Button>
                 </form>
                 <div className="text-center text-sm text-muted-foreground">
