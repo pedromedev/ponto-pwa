@@ -70,6 +70,7 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
   }
 
   const getDayStyles = (date: Date, marker?: DayMarker) => {
+    
     const baseStyles = 'h-10 w-10 rounded-full flex items-center justify-center text-sm'
     
     if (!isSameMonth(date, referenceMonth)) {

@@ -1,0 +1,29 @@
+VERDINHO: SEM JUSTIFICATIVAS, HORARIO PADRAO
+AMARELO: COM JUSTIFICAS, HORARIO NÃO PADRAO
+VERMELHO: SEM JUSTIFICAR, HORARIO NAO PADRÃO
+
+horario de compensação: 10minutos de tolerancia pra cima e pra baixo.
+(so para saida e entrada, sem almoço)
+
+(obs: o que não abona na justifica, vira banco de horas)
+
+____
+
+gerencial (visual): 
+
+resumo pvt por mês, periodo, baseado na planilha gerada
+
+calendario de registro
+panoramico e status (em dia ou atrasado) (do dia) (baseado na media de status)
+
+retroativo = justificativas
+
+banco de horas ou abono de horas
+para justificavas
+
+- banco de horas: consome as horas
+(status verdinho para o colaborador)
+
+- abono de horas: não considera as horas no banco de horas (status verdinho para o colaborador)
+
+- faltas: (validar melhor o processo)

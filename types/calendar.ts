@@ -1,9 +1,7 @@
-import { TimeEntryResponse } from '@/types/time-entry'
-
 export interface DayMarker {
   id: number
   date: Date
-  status: 'complete' | 'incomplete' | 'missing' | 'holiday'
+  status: string //'complete' | 'incomplete' | 'missing' | 'holiday'
   tooltip?: string
 }
 

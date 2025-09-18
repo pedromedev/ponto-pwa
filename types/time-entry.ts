@@ -67,6 +67,7 @@ export interface TimeEntryResponse {
   clockOutJustification: string | null
   createdAt: string
   updatedAt: string
+  status: string
 }
 
 // Novo tipo para response do ponto do dia

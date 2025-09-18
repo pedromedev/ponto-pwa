@@ -25,6 +25,7 @@ import {
   formatTimeBR
 } from '@/lib/date-utils'
 import { DEFAULT_ORGANIZATION_ID, API_ROUTES, MESSAGES } from '@/lib/constants'
+import { time } from 'console'
 
 export const useTimeEntry = () => {
   const { user } = useAuth()
@@ -45,7 +46,7 @@ export const useTimeEntry = () => {
   useEffect(() => {
     if (user?.id) {
       fetchTodayTimeEntry()
-      fetchTimeEntriesPerMonth()
+      fetchTimeEntriesByUser()
     }
   }, [])
 
@@ -53,22 +54,53 @@ export const useTimeEntry = () => {
     getMarkersForEntries()
   }, [timeEntries])
 
+  function checkTolerancia(clockInStr: string): number {
+    // Transforma 'HH:mm' em minutos totais
+    const timeToMinutes = (timeStr: string): number => {
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      return hours * 60 + minutes;
+    };
+
+    const clockIn = timeToMinutes(clockInStr);
+    const refTime = timeToMinutes('08:00');
+    const upperLimit = timeToMinutes('08:10');
+    const lowerLimit = timeToMinutes('07:50');
+
+    if (clockIn > upperLimit) {
+      // Atrasado além da tolerância → saldo negativo
+      return clockIn - refTime;
+    }
+
+    if (clockIn < lowerLimit) {
+      // Adiantado além da tolerância → saldo positivo
+      return clockIn - refTime;
+    }
+
+    // Dentro da tolerância → saldo neutro
+    return 0;
+  }
+
   const getMarkersForEntries = () => {
+
+    console.log("timeEntries", timeEntries)
+
     const markersData = timeEntries.map(entry => {
-  
-      const hasClockIn = !!entry.clockIn;
-      const hasClockOut = !!entry.clockOut;
-      const hasLunchStart = !!entry.lunchStart;
-      const hasLunchEnd = !!entry.lunchEnd;
-  
-      let status: 'complete' | 'incomplete' | 'missing' | 'holiday';
-  
-      if (!hasClockIn && !hasClockOut && !hasLunchStart && !hasLunchEnd) {
-        status = 'missing';
-      } else if (hasClockIn && hasClockOut && hasLunchStart && hasLunchEnd) {
-        status = 'complete';
-      } else {
-        status = 'incomplete';
+
+      let status = ''
+
+      switch(entry.status) {
+        case 'Incompleto':
+          status = 'incomplete'
+          break
+        case 'Correto':
+          status = 'complete'
+          break
+        case 'Sem justificativa':
+          status = 'missing'
+          break
+        case 'Fora do padrão':
+          status = 'incomplete'
+          break
       }
   
       const dateObj = new Date(entry.date);
@@ -199,6 +231,23 @@ export const useTimeEntry = () => {
     try {
       setIsLoadingEntries(true)
       const entries = await api.get<TimeEntryResponse[]>(API_ROUTES.TIME_ENTRY.BY_MONTH(user.id, month), true)
+      setTimeEntries(entries)
+      getMarkersForEntries()
+    } catch (error: any) {
+      toast.error(MESSAGES.ERROR.ENTRIES_LOAD_ERROR)
+    } finally {
+      setIsLoadingEntries(false)
+    }
+  }
+
+  // Buscar histórico de entries do usuario por mês
+  const fetchTimeEntriesByUser= async (): Promise<void> => {
+
+    if (!user?.id ) return
+
+    try {
+      setIsLoadingEntries(true)
+      const entries = await api.get<TimeEntryResponse[]>(API_ROUTES.TIME_ENTRY.USER(user.id), true)
       setTimeEntries(entries)
       getMarkersForEntries()
     } catch (error: any) {
