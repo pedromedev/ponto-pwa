@@ -6,6 +6,7 @@ import {
   TimeEntryFields,
   FieldName,
   TimeEntryResponse,
+  TimeEntryWithUserResponse,
   TodayTimeEntryResponse,
   PunchTimeDto,
   INITIAL_FIELDS_STATE
@@ -54,35 +55,76 @@ export const useTimeEntry = () => {
     getMarkersForEntries()
   }, [timeEntries])
 
-  function checkTolerancia(clockInStr: string): number {
-    // Transforma 'HH:mm' em minutos totais
-    const timeToMinutes = (timeStr: string): number => {
-      const [hours, minutes] = timeStr.split(':').map(Number);
-      return hours * 60 + minutes;
+  const checkTolerancia = (date: string, clockStr: string, clockJustification: string, timeType: string): { bancoHoras: number, isJustified: boolean } => {
+    // Converte data ISO 8601 em minutos totais do dia
+    const timeToMinutes = (dateStr: string): number => {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) {
+        throw new Error('Formato de data inválido');
+      }
+      return date.getHours() * 60 + date.getMinutes();
     };
 
-    const clockIn = timeToMinutes(clockInStr);
-    const refTime = timeToMinutes('08:00');
-    const upperLimit = timeToMinutes('08:10');
-    const lowerLimit = timeToMinutes('07:50');
-
-    if (clockIn > upperLimit) {
-      // Atrasado além da tolerância → saldo negativo
-      return clockIn - refTime;
+    // Valida o formato do parâmetro date (YYYY-MM-DD)
+    if (!date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      throw new Error('Data base deve estar no formato YYYY-MM-DD');
     }
 
-    if (clockIn < lowerLimit) {
+    if (clockStr === null) {
+      return { bancoHoras: 0, isJustified: false };
+    }
+
+    let refTime: number, upperLimit: number, lowerLimit: number;
+
+    switch (timeType) {
+      case 'clockIn':
+        refTime = timeToMinutes(`${date}T11:00:00.000Z`);
+        upperLimit = timeToMinutes(`${date}T11:10:00.000Z`);
+        lowerLimit = timeToMinutes(`${date}T10:50:00.000Z`);
+        break;
+      case 'lunchStart':
+        refTime = timeToMinutes(`${date}T15:00:00.000Z`);
+        upperLimit = timeToMinutes(`${date}T15:10:00.000Z`);
+        lowerLimit = timeToMinutes(`${date}T14:50:00.000Z`);
+        break;
+      case 'lunchEnd':
+        refTime = timeToMinutes(`${date}T16:15:00.000Z`);
+        upperLimit = timeToMinutes(`${date}T16:25:00.000Z`);
+        lowerLimit = timeToMinutes(`${date}T16:05:00.000Z`);
+        break;
+      case 'clockOut':
+        refTime = timeToMinutes(`${date}T21:00:00.000Z`);
+        upperLimit = timeToMinutes(`${date}T21:10:00.000Z`);
+        lowerLimit = timeToMinutes(`${date}T20:50:00.000Z`);
+        break;
+      default:
+        throw new Error('Tipo de marcação inválido');
+    }
+
+    const clockMinutes = timeToMinutes(clockStr);
+
+    let bancoHoras = 0;
+    let isJustified = clockJustification.trim() !== '';
+
+    if (clockMinutes > upperLimit) {
+      // Atrasado além da tolerância → saldo negativo
+      bancoHoras = clockMinutes - refTime;
+      isJustified = clockJustification.trim() !== '';
+      return { bancoHoras, isJustified };
+    }
+
+    if (clockMinutes < lowerLimit) {
       // Adiantado além da tolerância → saldo positivo
-      return clockIn - refTime;
+      bancoHoras = clockMinutes - refTime;
+      isJustified = clockJustification.trim() !== '';
+      return { bancoHoras, isJustified };
     }
 
     // Dentro da tolerância → saldo neutro
-    return 0;
+    return { bancoHoras, isJustified };
   }
 
   const getMarkersForEntries = () => {
-
-    console.log("timeEntries", timeEntries)
 
     const markersData = timeEntries.map(entry => {
 
@@ -117,6 +159,21 @@ export const useTimeEntry = () => {
 
     setMarkers(markersData)
   }
+  // // Buscar entradas com detalhes do usuário (nova consulta no backend)
+  // const fetchTimeEntriesWithUserDetails = async (): Promise<void> => {
+  //   if (!user?.id) return
+
+  //   try {
+  //     setIsLoadingEntries(true)
+  //     console.log('user:', user)
+  //     const entries = await api.get<TimeEntryWithUserResponse[]>(API_ROUTES.TIME_ENTRY.ORGANIZATION(1), true)
+  //     setTimeEntriesWithUser(entries)
+  //   } catch (error: any) {
+  //     toast.error(MESSAGES.ERROR.ENTRIES_LOAD_ERROR)
+  //   } finally {
+  //     setIsLoadingEntries(false)
+  //   }
+  // }
   
   // Buscar ponto do dia atual
   const fetchTodayTimeEntry = async (): Promise<void> => {
@@ -486,6 +543,7 @@ export const useTimeEntry = () => {
     fetchDateSelectedTimeEntry,
     fetchTimeEntries,
     fetchTimeEntriesPerMonth,
-    getMarkersForEntries
+    getMarkersForEntries,
+    checkTolerancia
   }
 } 

@@ -3,6 +3,7 @@ export const DEFAULT_ORGANIZATION_ID = 1
 export const API_ROUTES = {
   TIME_ENTRY: {
     PUNCH: '/time-entry/punch',
+    ORGANIZATION: (organizationId: number) => `/time-entry?organizationId=${organizationId}`,
     TODAY: (userId: number) => `/time-entry/today/${userId}`,
     USER: (userId: number) => `/time-entry/user/${userId}`,
     CREATE: '/time-entry',

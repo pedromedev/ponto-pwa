@@ -85,6 +85,16 @@ export interface TodayTimeEntryResponse {
   clockOutJustification: string | null
 }
 
+export interface TimeEntryWithUserResponse extends TimeEntryResponse {
+  userName: string;
+  userRole: 'MANAGER' | 'MEMBER';
+  calculatedHoursWorked: number; // Calculado no backend
+  calculatedDaysWorked: number;
+  calculatedAbsences: number;
+  calculatedBankHours: number;
+  calculatedAvgHoursPerDay: number;
+}
+
 export const FIELD_LABELS: Record<FieldName, string> = {
   clockIn: 'Entrada',
   lunchStart: 'Início do Almoço',

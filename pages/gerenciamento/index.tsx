@@ -41,6 +41,9 @@ import {
 } from 'lucide-react'
 import TeamMembersModal from '@/components/team-members-modal'
 import ManagerGuard from '@/components/manager-guard'
+import Dashboard from '@/components/dashboard-admin'
+import { set } from 'date-fns'
+import { TimeEntryWithUserResponse } from '@/types/time-entry'
 
 const GerenciamentoPage: NextPageWithLayout = () => {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'teams' | 'invitations' | 'reports'>('dashboard')
@@ -48,6 +51,7 @@ const GerenciamentoPage: NextPageWithLayout = () => {
   const [teams, setTeams] = useState<Team[]>([])
   const [invitations, setInvitations] = useState<Invitation[]>([])
   const [availableUsers, setAvailableUsers] = useState<User[]>([])
+  const [timeEntriesWithUser, setTimeEntriesWithUser] = useState<TimeEntryWithUserResponse[]>([])
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   
@@ -85,7 +89,8 @@ const GerenciamentoPage: NextPageWithLayout = () => {
         loadStats(),
         loadTeams(),
         loadInvitations(),
-        loadAvailableUsers()
+        loadAvailableUsers(),
+        loadDashboardEntries()
       ])
     } catch (error) {
       console.error('Erro ao carregar dados iniciais:', error)
@@ -122,6 +127,16 @@ const GerenciamentoPage: NextPageWithLayout = () => {
     } catch (error) {
       console.error('Erro ao carregar convites:', error)
       toast.error('Erro ao carregar convites')
+    }
+  }
+
+  const loadDashboardEntries = async () => {
+    try {
+      const data = await api.get<TimeEntryWithUserResponse[]>(API_ROUTES.TIME_ENTRY.ORGANIZATION(DEFAULT_ORGANIZATION_ID), true)
+      setTimeEntriesWithUser(data)
+    } catch (error) {
+      console.error('Erro ao carregar entradas do dashboard:', error)
+      toast.error('Erro ao carregar entradas do dashboard')
     }
   }
 
@@ -355,44 +370,7 @@ const GerenciamentoPage: NextPageWithLayout = () => {
 
       {/* Dashboard */}
       {activeTab === 'dashboard' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total de Equipes</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.totalTeams || 0}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total de Membros</CardTitle>
-              <UserCheck className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.totalMembers || 0}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Convites Pendentes</CardTitle>
-              <Mail className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.pendingInvitations || 0}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Equipes Ativas</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.activeTeams || 0}</div>
-            </CardContent>
-          </Card>
-        </div>
+        <Dashboard externalStats={{ totalTeams: stats?.totalTeams || 0, timeEntries: timeEntriesWithUser}} />
       )}
 
       {/* Gerenciamento de Equipes */}
