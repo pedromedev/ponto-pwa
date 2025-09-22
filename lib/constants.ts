@@ -11,6 +11,26 @@ export const API_ROUTES = {
     BY_MONTH: (userId: number, month: number) => `/time-entry/by-month/${userId}/${month}`,
     BY_ID: (id: number) => `/time-entry/${id}`
   },
+  JUSTIFICATIONS: {
+    ALL: (initialDate?: string, finalDate?: string) => {
+      const params = new URLSearchParams();
+      if (initialDate) params.append('startDate', initialDate);
+      if (finalDate) params.append('endDate', finalDate);
+      return `/justifications?${params.toString()}`;
+    },
+    BY_USER: (userId: number, initialDate?: string, finalDate?: string) => {
+      const params = new URLSearchParams();
+      if (initialDate) params.append('startDate', initialDate);
+      if (finalDate) params.append('endDate', finalDate);
+      if (userId) params.append('userId', userId.toString());
+      return `/justifications?${params.toString()}`;
+    },
+    PENDING: `/justifications/pending-justifications`,
+    APPROVE: (justificationId: number) =>
+      `/justifications/${justificationId}/approve`,
+    REJECT: (justificationId: number) =>
+      `/justifications/${justificationId}/reject`,
+  },
   AUTH: {
     LOGIN: '/auth/login',
     REGISTER: '/auth/register',
