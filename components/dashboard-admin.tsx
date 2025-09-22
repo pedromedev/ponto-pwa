@@ -131,12 +131,23 @@ const Dashboard: React.FC<TimesheetOverviewProps> = ({ externalStats }) => {
   const [selectedEmployee, setSelectedEmployee] = useState<TimesheetEmployee | null>(null);
   const { checkTolerancia } = useTimeEntry();
 
-    // Mapear timeEntries para TimesheetEmployee
+  // Mapear timeEntries para TimesheetEmployee
   const employeeData: TimesheetEmployee[] = useMemo(() => {
 
-    if (!externalStats || !externalStats.timeEntries) return [];
+    function formatBankHoursHHMM(hours: number): string {
+      // Obtém o sinal (positivo ou negativo)
+      const sign = hours < 0 ? '+' : '-';
+      // Trabalha com o valor absoluto
+      const absHours = Math.abs(hours);
+      // Extrai a parte inteira (horas)
+      const hrs = Math.floor(absHours);
+      // Extrai os minutos (parte fracionária * 60)
+      const mins = Math.round((absHours - hrs) * 60);
+      // Formata com dois dígitos para horas e minutos
+      return `${sign}${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+    }
 
-    console.log('externalStats.timeEntries:', externalStats.timeEntries);
+    if (!externalStats || !externalStats.timeEntries) return [];
 
     const entriesByUser = externalStats.timeEntries.reduce((acc, entry) => {
       if (!acc[entry.userId]) {
@@ -146,21 +157,30 @@ const Dashboard: React.FC<TimesheetOverviewProps> = ({ externalStats }) => {
       return acc;
     }, {} as Record<number, TimeEntryWithUserResponse[]>);
 
-    return Object.entries(entriesByUser).map(([userId, entries]) => ({
+    console.log('entriesByUser:', entriesByUser)
+
+    let calculatedEntriesByUser = Object.entries(entriesByUser).map(([userId, entries]) => ({
       id: Number(userId),
       name: entries[0].userName || `Usuário ${userId}`,
       role: entries[0].userRole || (entries.some(e => e.status.includes('MANAGER')) ? 'MANAGER' : 'MEMBER'),
       status: 'Ativo',
-      daysWorked: entries[0].calculatedDaysWorked || 0,
-      hoursWorked: entries.reduce((sum, entry) => {
-        const hoursStr = entry.calculatedHoursWorked.toString();
-        if (hoursStr === '--') return sum;
-        const [h, m] = hoursStr.replace('h', ':').replace('m', '').split(':').map(Number);
-        return sum + h + m / 60;
+      daysWorked: entries.reduce((sum, entry) => {
+        const days = entry.calculatedDaysWorked;
+        return sum + days;
       }, 0),
-      avgHoursPerDay: entries[0].calculatedAvgHoursPerDay || 0,
-      bankHours: entries[0].calculatedBankHours || 0,
-      absences: entries[0].calculatedAbsences || 0,
+      hoursWorked: entries.reduce((sum, entry) => {
+        const hours = entry.calculatedHoursWorked;
+        return sum + hours;
+      }, 0),
+      avgHoursPerDay: 0,
+      bankHours: entries.reduce((sum, entry) => {
+        const bankHours = entry.calculatedBankHours;
+        return sum + bankHours;
+      }, 0),
+      absences: entries.reduce((sum, entry) => {
+        const absences = entry.calculatedAbsences;
+        return sum + absences;
+      }, 0),
       records: entries.map(entry => ({
         date: new Date(entry.date).toLocaleDateString('pt-BR'),
         entry: entry.clockIn ? new Date(entry.clockIn).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-',
@@ -168,19 +188,17 @@ const Dashboard: React.FC<TimesheetOverviewProps> = ({ externalStats }) => {
         lunchIn: entry.lunchEnd ? new Date(entry.lunchEnd).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-',
         exit: entry.clockOut ? new Date(entry.clockOut).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-',
         totalHours: entry.calculatedHoursWorked.toString() || '-',
-        balance: entry.clockIn
-          ? formatMinutesToHours(
-              checkTolerancia(
-                entry.date.split('T')[0],
-                entry.clockIn,
-                entry.clockInJustification || '',
-                'clockIn'
-              ).bancoHoras
-            )
-          : '-',
+        balance: entry.calculatedBankHours ? formatBankHoursHHMM(entry.calculatedBankHours) : '+0',
         obs: entry.clockInJustification || entry.lunchStartJustification || entry.lunchEndJustification || entry.clockOutJustification || '',
       })),
-    }));
+    }))
+
+    calculatedEntriesByUser = Object.values(calculatedEntriesByUser).map((userEntries) => {
+      userEntries.avgHoursPerDay = userEntries.hoursWorked / userEntries.daysWorked
+      return userEntries
+    })
+
+    return calculatedEntriesByUser;
   }, [externalStats?.timeEntries]);
   
   const overviewStats = useMemo(() => {

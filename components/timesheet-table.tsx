@@ -70,6 +70,14 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({ data, onSelectEmployee 
     return `${sign}${h}h${m > 0 ? ` ${m}m` : ''}`;
   };
 
+  const formatBankHours = (hours: number) => {
+    if (hours === 0) return '0h';
+    const h = Math.floor(Math.abs(hours));
+    const m = Math.round((Math.abs(hours) - h) * 60);
+    const sign = hours < 0 ? '+' : '-';
+    return `${sign}${h}h${m > 0 ? ` ${m}m` : ''}`;
+  };
+
   const getBadgeVariant = (value: number, type: 'balance' | 'absences') => {
     if (type === 'balance') {
       return value < -50 ? 'destructive' : value < 0 ? 'secondary' : 'default';
@@ -166,7 +174,7 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({ data, onSelectEmployee 
                 <TableCell className="text-white">{formatHours(emp.avgHoursPerDay)}</TableCell>
                 <TableCell>
                   <Badge variant={getBadgeVariant(emp.bankHours, 'balance')}>
-                    {formatHours(emp.bankHours)}
+                    {formatBankHours(emp.bankHours)}
                   </Badge>
                 </TableCell>
                 <TableCell>
