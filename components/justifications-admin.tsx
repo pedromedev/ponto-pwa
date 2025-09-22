@@ -17,12 +17,35 @@ import { TimeEntryWithUserResponse } from '@/types/time-entry';
 import { User } from '@/types/management';
 import { API_ROUTES } from '@/lib/constants';
 
+interface Justification {
+  id: number,
+  timeEntryId: number,
+  userId: number,
+  timeType: string,
+  justification: string,
+  status: string,
+  approverId: number | null,
+  approvedAt: number | null,
+  notes: string | null,
+  createdAt: string,
+  updatedAt: string,
+  user: {
+    name: string,
+    role: string
+  },
+  timeEntry: {
+    date: string, //"2025-09-01T00:00:00.000Z",
+    status: string
+  }
+}
+
+
 interface JustificationsAdminProps {
   availableUsers: User[];
 }
 
 const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUsers }) => {
-  const [justifications, setJustifications] = useState<TimeEntryWithUserResponse[]>([]);
+  const [justifications, setJustifications] = useState<Justification[]>([]);
   const [justificationFilters, setJustificationFilters] = useState<{
     startDate: string | null;
     endDate: string | null;
@@ -47,7 +70,7 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
       if (justificationFilters.endDate) params.append('endDate', justificationFilters.endDate);
       if (justificationFilters.userId) params.append('userId', justificationFilters.userId.toString());
 
-      const data = await api.get<TimeEntryWithUserResponse[]>(`${API_ROUTES.JUSTIFICATIONS.PENDING}?${params.toString()}`, true);
+      const data = await api.get<Justification[]>(`${API_ROUTES.JUSTIFICATIONS.ALL}?${params.toString()}`, true);
       setJustifications(data);
     } catch (error) {
       console.error('Erro ao carregar justificativas:', error);
@@ -55,24 +78,6 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
     } finally {
       setIsLoadingJustifications(false);
     }
-  };
-
-  const getJustificationText = (entry: TimeEntryWithUserResponse) => {
-    return [
-      entry.clockInJustification,
-      entry.lunchStartJustification,
-      entry.lunchEndJustification,
-      entry.clockOutJustification
-    ].filter(Boolean).join(' | ') || 'Nenhuma justificativa fornecida';
-  };
-
-  const getTimeType = (entry: TimeEntryWithUserResponse): keyof TimeEntryWithUserResponse => {
-    // Lógica simples para determinar o timeType baseado em qual justificativa está presente
-    if (entry.clockInJustification) return 'clockIn';
-    if (entry.lunchStartJustification) return 'lunchStart';
-    if (entry.lunchEndJustification) return 'lunchEnd';
-    if (entry.clockOutJustification) return 'clockOut';
-    return 'clockIn'; // Default fallback
   };
 
   const handleApproveJustification = async (id: number) => {
@@ -172,19 +177,19 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
       ) : (
         <div className="grid gap-4">
           {justifications.map(justification => {
-            const timeType = getTimeType(justification); // Determinar qual justificativa está pendente
+            const timeType = justification.timeType; // Determinar qual justificativa está pendente
             return (
               <Card key={justification.id}>
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle>{justification.userName} - {new Date(justification.date).toLocaleDateString('pt-BR')}</CardTitle>
+                      <CardTitle>{justification.user.name} - {new Date(justification.createdAt).toLocaleDateString('pt-BR')}</CardTitle>
                       <CardDescription>
                         <Badge variant="secondary">{justification.status}</Badge>
-                        <span className="ml-2">Role: {justification.userRole}</span>
+                        <span className="ml-2">Role: {justification.user.role}</span>
                       </CardDescription>
                       <div className="mt-2 text-sm text-muted-foreground">
-                        Justificativa: {getJustificationText(justification)}
+                        Justificativa: {justification.justification}
                       </div>
                     </div>
                     <div className="flex space-x-2">

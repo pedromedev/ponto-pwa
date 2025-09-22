@@ -12,24 +12,19 @@ export const API_ROUTES = {
     BY_ID: (id: number) => `/time-entry/${id}`
   },
   JUSTIFICATIONS: {
-    ALL: (initialDate?: string, finalDate?: string) => {
-      const params = new URLSearchParams();
-      if (initialDate) params.append('startDate', initialDate);
-      if (finalDate) params.append('endDate', finalDate);
-      return `/justifications?${params.toString()}`;
-    },
+    ALL: `/justification/`,
     BY_USER: (userId: number, initialDate?: string, finalDate?: string) => {
       const params = new URLSearchParams();
       if (initialDate) params.append('startDate', initialDate);
       if (finalDate) params.append('endDate', finalDate);
       if (userId) params.append('userId', userId.toString());
-      return `/justifications?${params.toString()}`;
+      return `/justification?${params.toString()}`;
     },
-    PENDING: `/justifications/pending-justifications`,
+    PENDING: `/justification/pending-justifications`,
     APPROVE: (justificationId: number) =>
-      `/justifications/${justificationId}/approve`,
+      `/justification/${justificationId}/approve`,
     REJECT: (justificationId: number) =>
-      `/justifications/${justificationId}/reject`,
+      `/justification/${justificationId}/reject`,
   },
   AUTH: {
     LOGIN: '/auth/login',
