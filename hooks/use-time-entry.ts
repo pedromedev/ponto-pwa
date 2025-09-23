@@ -475,6 +475,7 @@ export const useTimeEntry = () => {
       const punchData: PunchTimeDto = {
         userId: user.id,
         organizationId: DEFAULT_ORGANIZATION_ID,
+        date: todayEntry?.date,
         timeType: fieldName,
         justification: fields[fieldName].justification,
         ...(fields[fieldName].value ? {} : { timestamp: formatFusoHorario(new Date()).toISOString() })

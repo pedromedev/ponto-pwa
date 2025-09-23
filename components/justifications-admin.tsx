@@ -10,41 +10,50 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Loader2, CheckCircle, AlertTriangle, Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
-import { TimeEntryWithUserResponse } from '@/types/time-entry';
+import { useAuth } from '@/lib/auth'
 import { User } from '@/types/management';
 import { API_ROUTES } from '@/lib/constants';
 
 interface Justification {
-  id: number,
-  timeEntryId: number,
-  userId: number,
-  timeType: string,
-  justification: string,
-  status: string,
-  approverId: number | null,
-  approvedAt: number | null,
-  notes: string | null,
-  createdAt: string,
-  updatedAt: string,
+  id: number;
+  timeEntryId: number;
+  userId: number;
+  timeType: string;
+  justification: string;
+  status: string;
+  approverId: number | null;
+  approvedAt: number | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
   user: {
-    name: string,
-    role: string
-  },
+    name: string;
+    role: string;
+  };
   timeEntry: {
-    date: string, //"2025-09-01T00:00:00.000Z",
-    status: string
-  }
+    date: string;
+    status: string;
+    clockIn?: string;
+    lunchStart?: string;
+    lunchEnd?: string;
+    clockOut?: string;
+    clockInJustification?: string | null;
+    lunchStartJustification?: string | null;
+    lunchEndJustification?: string | null;
+    clockOutJustification?: string | null;
+  };
 }
-
 
 interface JustificationsAdminProps {
   availableUsers: User[];
 }
 
 const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUsers }) => {
+  const context = useAuth()
   const [justifications, setJustifications] = useState<Justification[]>([]);
   const [justificationFilters, setJustificationFilters] = useState<{
     startDate: string | null;
@@ -57,7 +66,7 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
   });
   const [isLoadingJustifications, setIsLoadingJustifications] = useState(false);
   const [loadingAction, setLoadingAction] = useState<number | null>(null);
-
+  
   useEffect(() => {
     loadJustifications();
   }, [justificationFilters]);
@@ -70,7 +79,7 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
       if (justificationFilters.endDate) params.append('endDate', justificationFilters.endDate);
       if (justificationFilters.userId) params.append('userId', justificationFilters.userId.toString());
 
-      const data = await api.get<Justification[]>(`${API_ROUTES.JUSTIFICATIONS.ALL}?${params.toString()}`, true);
+      const data = await api.get<Justification[]>(`${API_ROUTES.JUSTIFICATIONS.PENDING}?${params.toString()}`, true);
       setJustifications(data);
     } catch (error) {
       console.error('Erro ao carregar justificativas:', error);
@@ -81,9 +90,14 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
   };
 
   const handleApproveJustification = async (id: number) => {
+
+    if(!context.isAuthenticated || !context.user?.id) {
+      return
+    }
+
     try {
       setLoadingAction(id);
-      await api.patch(API_ROUTES.JUSTIFICATIONS.APPROVE(id), {}, true);
+      await api.patch(API_ROUTES.JUSTIFICATIONS.APPROVE(id, context.user?.id), {}, true);
       toast.success('Justificativa aprovada com sucesso');
       loadJustifications();
     } catch (error) {
@@ -95,9 +109,14 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
   };
 
   const handleRejectJustification = async (id: number) => {
+    
+    if(!context.isAuthenticated || !context.user?.id) {
+      return
+    }
+
     try {
       setLoadingAction(id);
-      await api.patch(API_ROUTES.JUSTIFICATIONS.REJECT(id), {}, true);
+      await api.patch(API_ROUTES.JUSTIFICATIONS.REJECT(id, context.user?.id), {}, true);
       toast.success('Justificativa recusada com sucesso');
       loadJustifications();
     } catch (error) {
@@ -106,6 +125,10 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
     } finally {
       setLoadingAction(null);
     }
+  };
+
+  const formatDateTime = (dateTime?: string) => {
+    return dateTime ? new Date(dateTime).toLocaleString('pt-BR') : 'Não registrado';
   };
 
   return (
@@ -170,60 +193,89 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
       </Card>
 
       {/* Lista de Justificativas */}
-      {isLoadingJustifications ? (
-        <div className="flex justify-center items-center h-32">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : (
-        <div className="grid gap-4">
-          {justifications.map(justification => {
-            const timeType = justification.timeType; // Determinar qual justificativa está pendente
-            return (
-              <Card key={justification.id}>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle>{justification.user.name} - {new Date(justification.createdAt).toLocaleDateString('pt-BR')}</CardTitle>
-                      <CardDescription>
-                        <Badge variant="secondary">{justification.status}</Badge>
-                        <span className="ml-2">Role: {justification.user.role}</span>
-                      </CardDescription>
-                      <div className="mt-2 text-sm text-muted-foreground">
-                        Justificativa: {justification.justification}
+      <TooltipProvider>
+        {isLoadingJustifications ? (
+          <div className="flex justify-center items-center h-32">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {justifications.map(justification => {
+              return (
+                <Card key={justification.id}>
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-2">
+                        <div>
+                          <CardTitle>
+                            {justification.user.name} - {new Date(justification.createdAt).toLocaleDateString('pt-BR')}
+                          </CardTitle>
+                          <CardDescription>
+                            <Badge variant="secondary">{justification.status}</Badge>
+                            <span className="ml-2">Role: {justification.user.role}</span>
+                          </CardDescription>
+                          <div className="mt-2 text-sm text-muted-foreground">
+                            Justificativa: {justification.justification}
+                          </div>
+                        </div>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <Info className="h-4 w-4 text-primary" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-md p-4">
+                            <h4 className="font-semibold mb-2">Detalhes do Registro de Tempo</h4>
+                            <div className="text-sm space-y-1">
+                              <p><strong>Data:</strong> {new Date(justification.timeEntry.date).toLocaleDateString('pt-BR')}</p>
+                              <p><strong>Entrada:</strong> {formatDateTime(justification.timeEntry.clockIn)}</p>
+                              <p><strong>Justificativa de Entrada:</strong> {justification.timeEntry.clockInJustification || 'Nenhuma'}</p>
+                              <p><strong>Início do Almoço:</strong> {formatDateTime(justification.timeEntry.lunchStart)}</p>
+                              <p><strong>Justificativa de Início do Almoço:</strong> {justification.timeEntry.lunchStartJustification || 'Nenhuma'}</p>
+                              <br></br>
+                              <p><strong>Fim do Almoço:</strong> {formatDateTime(justification.timeEntry.lunchEnd)}</p>
+                              <p><strong>Justificativa de Fim do Almoço:</strong> {justification.timeEntry.lunchEndJustification || 'Nenhuma'}</p>
+                              <p><strong>Saída:</strong> {formatDateTime(justification.timeEntry.clockOut)}</p>
+                              <p><strong>Justificativa de Saída:</strong> {justification.timeEntry.clockOutJustification || 'Nenhuma'}</p>
+                              <br></br>
+                              <p><strong>Status:</strong> {justification.timeEntry.status}</p>
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          disabled={loadingAction === justification.id}
+                          onClick={() => handleApproveJustification(justification.id)}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Aprovar
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          disabled={loadingAction === justification.id}
+                          onClick={() => handleRejectJustification(justification.id)}
+                        >
+                          <AlertTriangle className="h-4 w-4 mr-1" />
+                          Recusar
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="default" 
-                        size="sm" 
-                        disabled={loadingAction === justification.id}
-                        onClick={() => handleApproveJustification(justification.id)}
-                      >
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Aprovar
-                      </Button>
-                      <Button 
-                        variant="destructive" 
-                        size="sm" 
-                        disabled={loadingAction === justification.id}
-                        onClick={() => handleRejectJustification(justification.id)}
-                      >
-                        <AlertTriangle className="h-4 w-4 mr-1" />
-                        Recusar
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-            );
-          })}
-          {justifications.length === 0 && (
-            <div className="text-center text-muted-foreground py-8">
-              Nenhuma justificativa pendente encontrada
-            </div>
-          )}
-        </div>
-      )}
+                  </CardHeader>
+                </Card>
+              );
+            })}
+            {justifications.length === 0 && (
+              <div className="text-center text-muted-foreground py-8">
+                Nenhuma justificativa pendente encontrada
+              </div>
+            )}
+          </div>
+        )}
+      </TooltipProvider>
     </div>
   );
 };

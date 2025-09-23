@@ -20,11 +20,11 @@ export const API_ROUTES = {
       if (userId) params.append('userId', userId.toString());
       return `/justification?${params.toString()}`;
     },
-    PENDING: `/justification/pending-justifications`,
-    APPROVE: (justificationId: number) =>
-      `/justification/${justificationId}/approve`,
-    REJECT: (justificationId: number) =>
-      `/justification/${justificationId}/reject`,
+    PENDING: `/justification/pending/`,
+    APPROVE: (justificationId: number, approverId: number) =>
+      `/justification/${justificationId}/approve/${approverId}`,
+    REJECT: (justificationId: number, approverId: number) =>
+      `/justification/${justificationId}/reject/${approverId}`,
   },
   AUTH: {
     LOGIN: '/auth/login',
