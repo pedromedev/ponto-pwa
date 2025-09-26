@@ -19,8 +19,8 @@ import {
   CreateTeamRequest, 
   CreateInvitationRequest,
   ReportFilters,
-  User
 } from '@/types/management'
+import { User } from "@/types/user"
 import { api } from '@/lib/api'
 import { API_ROUTES, DEFAULT_ORGANIZATION_ID } from '@/lib/constants'
 import { toast } from 'sonner'
@@ -42,9 +42,7 @@ import {
 import TeamMembersModal from '@/components/team-members-modal'
 import ManagerGuard from '@/components/manager-guard'
 import Dashboard from '@/components/dashboard-admin'
-import { set } from 'date-fns'
 import { TimeEntryWithUserResponse } from '@/types/time-entry'
-import JustificationsAdmin from '@/components/justifications-admin'
 
 const GerenciamentoPage: NextPageWithLayout = () => {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'teams' | 'invitations' | 'reports' | 'justifications'>('dashboard')
@@ -350,7 +348,6 @@ const GerenciamentoPage: NextPageWithLayout = () => {
       <div className="flex space-x-1 bg-muted rounded-lg p-1">
         {[
           { key: 'dashboard', label: 'Dashboard', icon: Users },
-          { key: 'justifications', label: 'Justificativas', icon: Users },
           { key: 'teams', label: 'Equipes', icon: Users },
           { key: 'invitations', label: 'Convites', icon: Mail },
           { key: 'reports', label: 'Relatórios', icon: Download }
@@ -373,11 +370,6 @@ const GerenciamentoPage: NextPageWithLayout = () => {
       {/* Dashboard */}
       {activeTab === 'dashboard' && (
         <Dashboard externalStats={{ totalTeams: stats?.totalTeams || 0, timeEntries: timeEntriesWithUser}} />
-      )}
-
-      {/* Justificativas */}
-      {activeTab === 'justifications' && (
-        <JustificationsAdmin availableUsers={availableUsers} />
       )}
 
       {/* Gerenciamento de Equipes */}

@@ -25,6 +25,12 @@ export const baseNavigationItems: NavigationItem[] = [
     description: 'Registrar pontos de dias anteriores'
   },
   {
+    label: 'Justificativas',
+    href: '/justificativas',
+    icon: Users,
+    description: 'Gerenciar justificativas'
+  },
+  {
     label: 'Gerenciamento',
     href: '/gerenciamento',
     icon: Users,

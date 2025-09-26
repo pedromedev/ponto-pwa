@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 
-import { CreateTimeEntryDto, FieldName, FIELD_LABELS, TimeEntryData, TimeEntryResponse } from '@/types/time-entry'
+import { CreateTimeEntryDto, FieldName, FIELD_LABELS, TimeEntryData, TimeEntryResponse, PunchTimeDto } from '@/types/time-entry'
 import { RetroactiveFormData } from '@/types/form'
 
 import Page from '@/components/page'
@@ -28,6 +28,13 @@ import { useTimeEntry } from '@/hooks/use-time-entry'
 import { format } from 'date-fns'
 import { JustificationSelect } from '@/components/ui/select'
 
+interface Justifications {
+  clockInJustification: string,
+  lunchStartJustification: string,
+  lunchEndJustification: string,
+  clockOutJustification: string
+}
+
 const RetroativoPage = () => {
 
   const { user } = useAuth()
@@ -36,6 +43,7 @@ const RetroativoPage = () => {
   const params = useSearchParams()
 
   const [ isSubmitting, setIsSubmitting ] = useState(false)
+  const [ isCompletedRegister, setIsCompletedRegister ] = useState(false)
   const [ dateParam, setDateParam ] = useState( params.get('date') )
   const [ entry, setEntry ] = useState<TimeEntryResponse>()
 
@@ -51,12 +59,22 @@ const RetroativoPage = () => {
     clockOutJustification: ''
   })
 
+  // Justificativas como objeto único, não array
+  const [justifications, setJustifications] = useState<Justifications>({
+    clockInJustification: '',
+    lunchStartJustification: '',
+    lunchEndJustification: '',
+    clockOutJustification: ''
+  })
+
   // preencher campos com entry selecionado
   const initializeFormWithEntry = (foundEntry: TimeEntryResponse, dateStr: string) => {
     
     if (foundEntry.clockIn && foundEntry.lunchStart && foundEntry.lunchEnd && foundEntry.clockOut) {
       toast.error('Não é possível modificar um registro já completo')
-      return
+      setIsCompletedRegister(true)
+    } else {
+      setIsCompletedRegister(false)
     }
 
     setEntry(foundEntry)
@@ -144,6 +162,12 @@ const RetroativoPage = () => {
   }
 
   const handleInputChange = (field: keyof RetroactiveFormData, value: string) => {
+    if (field.includes('Justification')) {
+      setJustifications(prev => ({
+        ...prev,
+        [field]: value
+      }))
+    }
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -152,6 +176,11 @@ const RetroativoPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!user) {
+      console.error("Usuário não logado")
+      return
+    }
     
     if (!formData.date) {
       toast.error(MESSAGES.ERROR.MISSING_DATE)
@@ -209,12 +238,38 @@ const RetroativoPage = () => {
       if (entry === undefined) {
         response = await api.post(API_ROUTES.TIME_ENTRY.CREATE, timeEntryData, true)
         setTimeEntries([...timeEntries, response])
-      } else {
+      }
+
+      if (entry && !isCompletedRegister) {    
         response = await api.patch(API_ROUTES.TIME_ENTRY.BY_ID(entry.id), timeEntryData, true)
         setTimeEntries(timeEntries.map(timeEntry => 
           timeEntry.id === entry.id ? response : timeEntry
         ))
-      }     
+      } 
+      
+      if (entry && isCompletedRegister) {   
+        // Se o registro está completo, ele só consegue justificar.
+        for (const key of Object.keys(justifications)) {
+          const justificationValue = justifications[key as keyof Justifications];
+          if (justificationValue && justificationValue.trim() !== '') {
+            // Exemplo: key = 'clockInJustification' => timeType = 'clockIn'
+            const timeType = key.replace('Justification', '');
+            const punchData = {
+              userId: timeEntryData.userId,
+              organizationId: DEFAULT_ORGANIZATION_ID,
+              date: timeEntryData.date,
+              timeType,
+              justification: justificationValue
+            };
+            await api.post(API_ROUTES.TIME_ENTRY.PUNCH, punchData, true);
+          }
+        }
+
+        response = await api.patch(API_ROUTES.TIME_ENTRY.BY_ID(entry.id), timeEntryData, true)
+        setTimeEntries(timeEntries.map(timeEntry => 
+          timeEntry.id === entry.id ? response : timeEntry
+        ))
+      }
 
       toast.success(MESSAGES.SUCCESS.RETROACTIVE_SAVED)
       
@@ -230,11 +285,9 @@ const RetroativoPage = () => {
         lunchEndJustification: '',
         clockOutJustification: ''
       })
-
       
       setEntry(undefined)
       setDateParam('')
-
 
     } catch (error: any) {
       console.error('Erro no submit:', error)
@@ -300,6 +353,7 @@ const RetroativoPage = () => {
                           value={(formData[fieldName])}
                           onChange={(time) => handleInputChange(fieldName, time)}
                           placeholder="HH:MM"
+                          disabled={isCompletedRegister} 
                         />
                       </div>
 
