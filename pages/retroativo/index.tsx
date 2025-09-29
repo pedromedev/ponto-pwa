@@ -236,6 +236,7 @@ const RetroativoPage = () => {
 
       let response: TimeEntryResponse
       if (entry === undefined) {
+        timeEntryData.status = 'Pendente aprovação'
         response = await api.post(API_ROUTES.TIME_ENTRY.CREATE, timeEntryData, true)
         setTimeEntries([...timeEntries, response])
       }
@@ -265,10 +266,10 @@ const RetroativoPage = () => {
           }
         }
 
-        response = await api.patch(API_ROUTES.TIME_ENTRY.BY_ID(entry.id), timeEntryData, true)
-        setTimeEntries(timeEntries.map(timeEntry => 
-          timeEntry.id === entry.id ? response : timeEntry
-        ))
+        // response = await api.patch(API_ROUTES.TIME_ENTRY.BY_ID(entry.id), timeEntryData, true)
+        // setTimeEntries(timeEntries.map(timeEntry => 
+        //   timeEntry.id === entry.id ? response : timeEntry
+        // ))
       }
 
       toast.success(MESSAGES.SUCCESS.RETROACTIVE_SAVED)

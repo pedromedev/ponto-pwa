@@ -36,6 +36,7 @@ export interface CreateTimeEntryDto {
   lunchStartJustification?: string
   lunchEndJustification?: string
   clockOutJustification?: string
+  status?: string
 }
 
 export interface TimeEntryData {

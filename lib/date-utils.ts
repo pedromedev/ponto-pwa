@@ -102,10 +102,14 @@ export const calculateTimeDifference = (start: Date, end: Date): number => {
 
 export const getDayName = (date: Date | string): string => {
 
-  const dateObj = typeof date === 'string' ? parseDate(date) : date
-  if (!dateObj) return ''
+  try {
+    const dateObj = typeof date === 'string' ? parseDate(date) : date
+    if (!dateObj) return ''
+    return format(dateObj, 'EEEE', { locale: ptBR })
+  } catch (e) {
+    return 'Não definido'
+  }
 
-  return format(dateObj, 'EEEE', { locale: ptBR })
 }
 
 export const getMonthStartDate = (date: Date | string): Date => {
