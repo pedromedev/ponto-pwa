@@ -37,7 +37,6 @@ interface TimesheetOverviewProps {
 
 const Dashboard: React.FC<TimesheetOverviewProps> = ({ externalStats }) => {
   const [selectedEmployee, setSelectedEmployee] = useState<TimesheetEmployee | null>(null);
-  const { checkTolerancia } = useTimeEntry();
 
   // Mapear timeEntries para TimesheetEmployee
   const employeeData: TimesheetEmployee[] = useMemo(() => {
@@ -64,8 +63,6 @@ const Dashboard: React.FC<TimesheetOverviewProps> = ({ externalStats }) => {
       acc[entry.userId].push(entry);
       return acc;
     }, {} as Record<number, TimeEntryWithUserResponse[]>);
-
-    console.log('entriesByUser:', entriesByUser)
 
     let calculatedEntriesByUser = Object.entries(entriesByUser).map(([userId, entries]) => ({
       id: Number(userId),
@@ -113,8 +110,6 @@ const Dashboard: React.FC<TimesheetOverviewProps> = ({ externalStats }) => {
 
     let totalEmployees = 0;let activeEmployees = 0;let totalDaysWorked = 0;let totalHoursWorked = 0
     let totalAbsences = 0;let avgHours = 0;let employeesWithNegativeBalance = 0;let employeesWithPositiveBalance = 0
-
-    console.log('employeeData - overviewStats:', employeeData)
 
     totalEmployees = employeeData.length;
     activeEmployees = employeeData.filter(emp => emp.status === 'Ativo').length;

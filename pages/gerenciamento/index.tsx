@@ -45,7 +45,7 @@ import Dashboard from '@/components/dashboard-admin'
 import { TimeEntryWithUserResponse } from '@/types/time-entry'
 
 const GerenciamentoPage: NextPageWithLayout = () => {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'teams' | 'invitations' | 'reports' | 'justifications'>('dashboard')
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'teams' | 'invitations' | 'reports'>('dashboard')
   const [stats, setStats] = useState<OrganizationStats | null>(null)
   const [teams, setTeams] = useState<Team[]>([])
   const [invitations, setInvitations] = useState<Invitation[]>([])

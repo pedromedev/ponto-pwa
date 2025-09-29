@@ -481,9 +481,7 @@ export const useTimeEntry = () => {
         ...(fields[fieldName].value ? {} : { timestamp: formatFusoHorario(new Date()).toISOString() })
       }
 
-      console.log('punchData:',punchData)
-
-      // await api.post(API_ROUTES.TIME_ENTRY.PUNCH, punchData, true)
+      await api.post(API_ROUTES.TIME_ENTRY.PUNCH, punchData, true)
 
       setFields(prev => ({
         ...prev,

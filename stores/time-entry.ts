@@ -36,9 +36,7 @@ type TimeEntryStore = {
 
     isLoadingEntries: boolean,
     isLoadingToday: boolean,
-    isSubmitting: Record<FieldName, boolean>,
-
-    getMarkersForEntries: () => void
+    isSubmitting: Record<FieldName, boolean>
 }
 
 export const useTimeEntryStore = create<TimeEntryStore>((set) => ({
@@ -140,9 +138,5 @@ export const useTimeEntryStore = create<TimeEntryStore>((set) => ({
     lunchStart: false,
     lunchEnd: false,
     clockOut: false
-  },
-
-  getMarkersForEntries: () => {
-    console.log('')
   }
 }))
