@@ -409,17 +409,19 @@ export const useTimeEntry = () => {
   // Registrar ponto individual usando o novo endpoint
   const handleFieldClick = async (fieldName: FieldName): Promise<void> => {
 
-    const isRegistrationCompleted = Object.values(fields).every(field => field.isJustified)
-    const isFieldHasValue = fields[fieldName].value !== undefined && fields[fieldName].value !== null
+    const todayDate = new Date();
+    const referenceDate = todayEntry?.date ? new Date(todayEntry.date) : new Date('Invalid Date');
 
-    if ( isFieldHasValue || isRegistrationCompleted || !user?.id || isSubmitting[fieldName] ) {
-      return
+    const isRegistrationCompleted = Object.values(fields).every(field => field.isJustified);
+    const isFieldHasValue = fields[fieldName].value !== undefined && fields[fieldName].value !== null;
+    const isSameDate = todayDate.toDateString() === referenceDate.toDateString(); // Compare only year, month, day
+
+    if (isFieldHasValue || isRegistrationCompleted || !user?.id || isSubmitting[fieldName] || isSameDate) {
+      return;
     }
     
     try {
       setIsSubmitting(prev => ({ ...prev, [fieldName]: true }))
-      
-      const todayDate = new Date()
       
       const punchData: PunchTimeDto = {
         userId: user.id,
