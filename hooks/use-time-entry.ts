@@ -29,7 +29,7 @@ import { DEFAULT_ORGANIZATION_ID, API_ROUTES, MESSAGES } from '@/lib/constants'
 import { time } from 'console'
 
 export const useTimeEntry = () => {
-  const { user } = useAuth()
+  const { user, isLoading: isAuthLoading } = useAuth()
   const [month, setMonth ] = useState<number>(new Date().getMonth() + 1)
   const [fields, setFields] = useState<TimeEntryFields>(INITIAL_FIELDS_STATE)
   const [isSubmitting, setIsSubmitting] = useState<Record<FieldName, boolean>>({
@@ -45,11 +45,11 @@ export const useTimeEntry = () => {
   const [isLoadingToday, setIsLoadingToday] = useState(false)
 
   useEffect(() => {
-    if (user?.id) {
-      fetchTodayTimeEntry()
-      fetchTimeEntriesByUser()
-    }
-  }, [])
+    if (isAuthLoading) return;
+    if (!user) return;
+    fetchTodayTimeEntry();
+    fetchTimeEntriesByUser();
+  }, [isAuthLoading, user])
 
   useEffect(() => {
     getMarkersForEntries()
@@ -127,32 +127,6 @@ export const useTimeEntry = () => {
   const getMarkersForEntries = () => {
 
     const markersData = timeEntries.map(entry => {
-
-      let status = ''
-
-      switch(entry.status) {
-        case 'Correto':
-          status = 'complete'
-          break
-        case 'Aprovado':
-          status = 'complete'
-          break
-        case 'Reprovado':
-          status = 'missing'
-          break
-        case 'Sem justificativa':
-          status = 'missing'
-          break
-        case 'Fora do padrão':
-          status = 'incomplete'
-          break
-        case 'Pendente aprovação':
-          status = 'incomplete'
-          break
-        case 'Incompleto':
-          status = 'incomplete'
-          break
-      }
   
       const dateObj = new Date(entry.date);
       const dateFusoHorario = new Date(dateObj.getTime() + dateObj.getTimezoneOffset() * 60000)
@@ -160,33 +134,18 @@ export const useTimeEntry = () => {
       return {
         id: entry.id,
         date: dateFusoHorario,
-        status: status,
-        tooltip: status
+        status: entry.status,
+        tooltip: entry.status
       }
     
     })
 
     setMarkers(markersData)
   }
-  // // Buscar entradas com detalhes do usuário (nova consulta no backend)
-  // const fetchTimeEntriesWithUserDetails = async (): Promise<void> => {
-  //   if (!user?.id) return
-
-  //   try {
-  //     setIsLoadingEntries(true)
-  //     console.log('user:', user)
-  //     const entries = await api.get<TimeEntryWithUserResponse[]>(API_ROUTES.TIME_ENTRY.ORGANIZATION(1), true)
-  //     setTimeEntriesWithUser(entries)
-  //   } catch (error: any) {
-  //     toast.error(MESSAGES.ERROR.ENTRIES_LOAD_ERROR)
-  //   } finally {
-  //     setIsLoadingEntries(false)
-  //   }
-  // }
   
   // Buscar ponto do dia atual
   const fetchTodayTimeEntry = async (): Promise<void> => {
-    if (!user?.id) return
+    if (!user) return;
 
     try {
       setIsLoadingToday(true)
@@ -231,7 +190,7 @@ export const useTimeEntry = () => {
   // Buscar ponto do dia selecionado
   const fetchDateSelectedTimeEntry = async (date: string | undefined ): Promise<void> => {
     
-    if (!user?.id || !date ) return
+    if (!user || !date) return;
 
     try {
       setIsLoadingToday(true)
@@ -276,7 +235,7 @@ export const useTimeEntry = () => {
 
   // Buscar histórico de time entries
   const fetchTimeEntries = async (): Promise<void> => {
-    if (!user?.id) return
+    if (!user) return;
 
     try {
       setIsLoadingEntries(true)
@@ -292,7 +251,7 @@ export const useTimeEntry = () => {
   // Buscar histórico de entries do usuario por mês
   const fetchTimeEntriesPerMonth = async (): Promise<void> => {
 
-    if (!user?.id || !month ) return
+    if (!user || !month) return;
 
     try {
       setIsLoadingEntries(true)
@@ -309,7 +268,7 @@ export const useTimeEntry = () => {
   // Buscar histórico de entries do usuario por mês
   const fetchTimeEntriesByUser= async (): Promise<void> => {
 
-    if (!user?.id ) return
+    if (!user) return;
 
     try {
       setIsLoadingEntries(true)
@@ -425,7 +384,7 @@ export const useTimeEntry = () => {
     const isFieldHasValue = fields[fieldName].value !== undefined && fields[fieldName].value !== null;
     const isSameDate = todayDate.toDateString() === referenceDate.toDateString(); // Compare only year, month, day
 
-    if (isFieldHasValue || isRegistrationCompleted || !user?.id || isSubmitting[fieldName] || isSameDate) {
+    if (isFieldHasValue || isRegistrationCompleted || !user || isSubmitting[fieldName] || isSameDate) {
       return;
     }
     
@@ -475,7 +434,7 @@ export const useTimeEntry = () => {
   // Submeter justificativa usando o novo endpoint
   const handleJustificationSubmit = async (fieldName: FieldName): Promise<void> => {
 
-    if (!user?.id || !fields[fieldName].justification.trim() || isSubmitting[fieldName]) {
+    if (!user|| !fields[fieldName].justification.trim() || isSubmitting[fieldName]) {
       toast.error(MESSAGES.ERROR.EMPTY_JUSTIFICATION)
       return
     }
@@ -555,6 +514,7 @@ export const useTimeEntry = () => {
     fetchDateSelectedTimeEntry,
     fetchTimeEntries,
     fetchTimeEntriesPerMonth,
+    fetchTimeEntriesByUser,
     getMarkersForEntries,
     checkTolerancia
   }

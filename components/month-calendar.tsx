@@ -82,10 +82,13 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
     }
 
     const statusStyles = {
-      complete: 'bg-green-100 text-green-700 hover:bg-green-200',
-      incomplete: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200',
-      missing: 'bg-red-100 text-red-700 hover:bg-red-200',
-      holiday: 'bg-blue-100 text-blue-700 hover:bg-blue-200',
+      'Correto': 'bg-green-100 text-green-700 hover:bg-green-200',
+      'Aprovado': 'bg-green-100 text-green-700 hover:bg-green-200',
+      'Reprovado': 'bg-red-100 text-red-700 hover:bg-red-200',
+      'Sem justificativa': 'bg-red-100 text-red-700 hover:bg-red-200',
+      'Fora do padrão': 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200',
+      'Pendente aprovação': 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200',
+      'Incompleto': 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200',
     }
 
     return cn(baseStyles, statusStyles[marker.status], 'cursor-pointer')

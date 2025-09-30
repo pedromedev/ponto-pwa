@@ -53,9 +53,10 @@ interface JustificationsAdminProps {
 }
 
 const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUsers }) => {
-  const { user } = useAuth()
-  const isManager = user?.role == 'MANAGER'
-  
+  const { user, isLoading: isAuthLoading } = useAuth()  
+  const [isManager, setIsManager] = useState<boolean>(false)
+  console.log("availableUsers:", availableUsers)
+
   const [justifications, setJustifications] = useState<Justification[]>([]);
   const [allJustifications, setAllJustifications] = useState<Justification[]>([]);
   const [justificationFilters, setJustificationFilters] = useState<{
@@ -76,11 +77,13 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
+
+  // Define isManager e filtros iniciais apenas quando user estiver pronto
   useEffect(() => {
-    if (!user) {
-      console.error("Usuário não logado")
-      return
-    }
+    if (isAuthLoading || !user) return;
+
+    const isUserManager = user.role === 'MANAGER';
+    setIsManager(isUserManager);
 
     // Primeiro e último dia do mês atual
     const now = new Date();
@@ -89,20 +92,25 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
     const pad = (n: number) => n.toString().padStart(2, '0');
     const format = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
-    setJustificationFilters({
+    setJustificationFilters(prev => ({
+      ...prev,
       startDate: format(firstDay),
       endDate: format(lastDay),
-      userId: isManager ? null : user.id,
+      userId: null,
       status: null,
-    })
-  }, [user])
+    }));
+
+    loadJustifications()
+  }, [isAuthLoading, user]);
   
+
   useEffect(() => {
     loadJustifications();
   }, [justificationFilters.startDate, justificationFilters.endDate, justificationFilters.userId]);
 
+
+  // Filtra por status no front
   useEffect(() => {
-    // Filtra por status no front
     setCurrentPage(1); // Sempre volta para a primeira página ao filtrar
     if (!justificationFilters.status || justificationFilters.status === 'ALL') {
       setJustifications(allJustifications);
@@ -112,12 +120,23 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
   }, [justificationFilters.status, allJustifications]);
 
   const loadJustifications = async () => {
+
+    if (!user) return
+
     try {
       setIsLoadingJustifications(true);
       const params = new URLSearchParams();
+
       if (justificationFilters.startDate) params.append('startDate', justificationFilters.startDate);
       if (justificationFilters.endDate) params.append('endDate', justificationFilters.endDate);
-      if (justificationFilters.userId) params.append('userId', justificationFilters.userId.toString());
+
+      if (user.role === 'MANAGER') {
+        if (justificationFilters.userId) params.append('userId', justificationFilters.userId.toString());
+      } 
+
+      if (user.role !== 'MANAGER') {
+        params.append('userId', user.id.toString());
+      }
 
       const data = await api.get<Justification[]>(`${API_ROUTES.JUSTIFICATIONS.ALL}?${params.toString()}`, true);
       setAllJustifications(data);
@@ -132,9 +151,7 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
 
   const handleApproveJustification = async (id: number) => {
 
-    if(!user) {
-      return
-    }
+    if (!user) return
 
     try {
       setLoadingAction(id);
@@ -151,9 +168,7 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
 
   const handleRejectJustification = async (id: number) => {
     
-    if(!user) {
-      return
-    }
+    if (!user) return
 
     try {
       setLoadingAction(id);

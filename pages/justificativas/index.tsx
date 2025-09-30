@@ -12,13 +12,15 @@ import { toast } from 'sonner'
 
 const JustificationPage = () => {
 
-    const { user } = useAuth()
+    const { user, isLoading: isAuthLoading } = useAuth()
     const [availableUsers, setAvailableUsers] = useState<User[]>([])
     const [initialLoading, setInitialLoading] = useState(true)
 
     useEffect(() => {
+        if(!user || isAuthLoading) return
         loadInitialData()
-    }, [])
+        
+    }, [user, isAuthLoading])
 
     const loadAvailableUsers = async () => {
         try {

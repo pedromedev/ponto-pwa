@@ -12,6 +12,7 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const { setError } = useLoginFormStore()
   const router = useRouter()
@@ -22,9 +23,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         const authToken = localStorage.getItem('auth-token')
         const userData = localStorage.getItem('user-data')
-        
         if (authToken && userData) {
           setUser(JSON.parse(userData))
+          setIsAuthenticated(true)
           // Definir cookie para o middleware
           document.cookie = `auth-token=${authToken}; path=/; max-age=${60 * 60 * 24 * 7}` // 7 dias
         }
@@ -57,6 +58,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Salvar dados do usuário
       localStorage.setItem('user-data', JSON.stringify(userData))
       setUser(userData)
+      setIsAuthenticated(true)
 
       router.push('/')
       
@@ -109,13 +111,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
       
       setUser(null)
+      setIsAuthenticated(false)
       
       // Redirecionar para login
       router.push('/auth/login')
     }
   }
-
-  const isAuthenticated = !!user
 
   return (
     <AuthContext.Provider
