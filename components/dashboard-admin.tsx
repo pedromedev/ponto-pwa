@@ -43,7 +43,7 @@ const Dashboard: React.FC<TimesheetOverviewProps> = ({ externalStats }) => {
 
     function formatBankHoursHHMM(hours: number): string {
       // Obtém o sinal (positivo ou negativo)
-      const sign = hours < 0 ? '+' : '-';
+      const sign = hours < 0 ? '-' : '+';
       // Trabalha com o valor absoluto
       const absHours = Math.abs(hours);
       // Extrai a parte inteira (horas)

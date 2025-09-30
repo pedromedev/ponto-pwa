@@ -131,16 +131,25 @@ export const useTimeEntry = () => {
       let status = ''
 
       switch(entry.status) {
-        case 'Incompleto':
-          status = 'incomplete'
-          break
         case 'Correto':
           status = 'complete'
+          break
+        case 'Aprovado':
+          status = 'complete'
+          break
+        case 'Reprovado':
+          status = 'missing'
           break
         case 'Sem justificativa':
           status = 'missing'
           break
         case 'Fora do padrão':
+          status = 'incomplete'
+          break
+        case 'Pendente aprovação':
+          status = 'incomplete'
+          break
+        case 'Incompleto':
           status = 'incomplete'
           break
       }

@@ -70,12 +70,12 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({ data, onSelectEmployee 
     return `${sign}${h}h${m > 0 ? ` ${m}m` : ''}`;
   };
 
-  const formatBankHours = (hours: number) => {
-    if (hours === 0) return '0h';
-    const h = Math.floor(Math.abs(hours));
-    const m = Math.round((Math.abs(hours) - h) * 60);
-    const sign = hours < 0 ? '+' : '-';
-    return `${sign}${h}h${m > 0 ? ` ${m}m` : ''}`;
+  const formatBankHours = (minutes: number) => {
+    if (minutes === 0) return '0h';
+    const h = Math.floor(Math.abs(minutes) / 60);
+    const m = Math.abs(minutes) % 60;
+    const sign = minutes < 0 ? '-' : '+';
+    return `${sign}${h > 0 ? `${h}h` : ''}${m > 0 ? `${m}m` : ''}`;
   };
 
   const getBadgeVariant = (value: number, type: 'balance' | 'absences') => {

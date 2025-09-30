@@ -53,7 +53,7 @@ const TimeEntriesAdmin: React.FC<TimeEntriesAdminProps> = ({ organizationId }) =
           lunchStartJustification: timeEntry.lunchStartJustification,
           lunchEndJustification: timeEntry.lunchEndJustification,
           clockOutJustification: timeEntry.clockOutJustification,
-          status: 'Correto'
+          status: 'Aprovado'
       }
       await api.patch(API_ROUTES.TIME_ENTRY.BY_ID(id), data, true);
       toast.success('Registro aprovado com sucesso');
