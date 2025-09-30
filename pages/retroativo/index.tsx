@@ -27,6 +27,7 @@ import { useSearchParams } from 'next/navigation'
 import { useTimeEntry } from '@/hooks/use-time-entry'
 import { format } from 'date-fns'
 import { JustificationSelect } from '@/components/ui/select'
+import TimeEntriesAdmin from '@/components/time-entries-admin'
 
 interface Justifications {
   clockInJustification: string,
@@ -38,6 +39,7 @@ interface Justifications {
 const RetroativoPage = () => {
 
   const { user } = useAuth()
+  const isManager = user?.role === 'MANAGER'
   const { timeEntries, setTimeEntries } = useTimeEntry()
   const router = useRouter()
   const params = useSearchParams()
@@ -324,7 +326,8 @@ const RetroativoPage = () => {
               </Button>
             </div>
 
-            <Card className="p-6">
+            { !isManager && (
+              <Card className="p-6">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="date">Data</Label>
@@ -390,7 +393,12 @@ const RetroativoPage = () => {
                   </Button>
                 </div>
               </form>
-            </Card>
+              </Card>
+            )}
+
+            { isManager && (
+              <TimeEntriesAdmin/>
+            )}
           </div>
           <TimeEntriesList
             timeEntries={timeEntries}

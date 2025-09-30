@@ -40,7 +40,22 @@ const TimeEntriesAdmin: React.FC<TimeEntriesAdminProps> = ({ organizationId }) =
   const handleApprove = async (id: number) => {
     setLoadingAction(id);
     try {
-      await api.patch(API_ROUTES.TIME_ENTRY.BY_ID(id), { status: 'Correto' }, true);
+      const timeEntry = entries.filter((entry: any) => entry.id === id)[0]
+      const data = {
+          userId: timeEntry.userId,
+          organizationId: timeEntry.organizationId,
+          date: timeEntry.date,
+          clockIn: timeEntry.clockIn,
+          lunchStart: timeEntry.lunchStart,
+          lunchEnd: timeEntry.lunchEnd,
+          clockOut: timeEntry.clockOut,
+          clockInJustification: timeEntry.clockInJustification,
+          lunchStartJustification: timeEntry.lunchStartJustification,
+          lunchEndJustification: timeEntry.lunchEndJustification,
+          clockOutJustification: timeEntry.clockOutJustification,
+          status: 'Correto'
+      }
+      await api.patch(API_ROUTES.TIME_ENTRY.BY_ID(id), data, true);
       toast.success('Registro aprovado com sucesso');
       loadEntries();
     } catch (error) {
@@ -53,7 +68,22 @@ const TimeEntriesAdmin: React.FC<TimeEntriesAdminProps> = ({ organizationId }) =
   const handleReject = async (id: number) => {
     setLoadingAction(id);
     try {
-      await api.patch(API_ROUTES.TIME_ENTRY.BY_ID(id), { status: 'Reprovado' }, true);
+      const timeEntry = entries.filter((entry: any) => entry.id === id)[0]
+      const data = {
+          userId: timeEntry.userId,
+          organizationId: timeEntry.organizationId,
+          date: timeEntry.date,
+          clockIn: timeEntry.clockIn,
+          lunchStart: timeEntry.lunchStart,
+          lunchEnd: timeEntry.lunchEnd,
+          clockOut: timeEntry.clockOut,
+          clockInJustification: timeEntry.clockInJustification,
+          lunchStartJustification: timeEntry.lunchStartJustification,
+          lunchEndJustification: timeEntry.lunchEndJustification,
+          clockOutJustification: timeEntry.clockOutJustification,
+          status: 'Reprovado'
+      }
+      await api.patch(API_ROUTES.TIME_ENTRY.BY_ID(id), data, true);
       toast.success('Registro reprovado com sucesso');
       loadEntries();
     } catch (error) {
@@ -90,10 +120,12 @@ const TimeEntriesAdmin: React.FC<TimeEntriesAdminProps> = ({ organizationId }) =
                 <CardContent>
                   <div className="flex flex-col gap-2 mb-4">
                     <span><strong>Usuário:</strong> {entry.userName || entry.userId}</span>
-                    <span><strong>Entrada:</strong> {entry.clockIn ? new Date(entry.clockIn).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}</span>
-                    <span><strong>Início Almoço:</strong> {entry.lunchStart ? new Date(entry.lunchStart).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}</span>
-                    <span><strong>Fim Almoço:</strong> {entry.lunchEnd ? new Date(entry.lunchEnd).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}</span>
-                    <span><strong>Saída:</strong> {entry.clockOut ? new Date(entry.clockOut).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}</span>
+                    <div className='flex gap-4'>
+                      <span><strong>Entrada:</strong> {entry.clockIn ? new Date(entry.clockIn).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}</span>
+                      <span><strong>Início Almoço:</strong> {entry.lunchStart ? new Date(entry.lunchStart).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}</span>
+                      <span><strong>Fim Almoço:</strong> {entry.lunchEnd ? new Date(entry.lunchEnd).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}</span>
+                      <span><strong>Saída:</strong> {entry.clockOut ? new Date(entry.clockOut).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}</span>
+                    </div>
                     <span><strong>Justificativas:</strong> {entry.clockInJustification || entry.lunchStartJustification || entry.lunchEndJustification || entry.clockOutJustification || '-'}</span>
                   </div>
                   <div className="flex gap-2">

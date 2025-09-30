@@ -1,22 +1,80 @@
-import React from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TimeEntryResponse, FIELD_LABELS } from '@/types/time-entry'
 import { formatDateBR, formatTime, calculateTimeDifference, formatMinutesToHours, formatTimeBR, formatDate, getDayName } from '@/lib/date-utils'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 import { useTimeEntry } from '@/hooks/use-time-entry'
+import { DatePicker } from './ui/date-picker'
 
 interface TimeEntriesListProps {
   timeEntries: TimeEntryResponse[],
-  isLoading: boolean
+  isLoading: boolean,
+  users?: { id: string, name: string }[]
 }
 
 export const TimeEntriesList: React.FC<TimeEntriesListProps> = ({
   timeEntries,
-  isLoading
+  isLoading,
+  users = []
 }) => {
-
   const { calculateWorkedHours } = useTimeEntry()
+
+  // Estado dos filtros
+  const [filters, setFilters] = useState({
+    startDate: '',
+    endDate: '',
+    userId: '',
+    status: '',
+  })
+
+  // Configurar datas iniciais (primeiro e último dia do mês atual)
+  useEffect(() => {
+    const now = new Date()
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    const pad = (n: number) => n.toString().padStart(2, '0')
+    const format = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+
+    setFilters(prev => ({
+      ...prev,
+      startDate: format(firstDay),
+      endDate: format(lastDay)
+    }))
+  }, [])
+
+  // Status possíveis
+  const statusOptions = [
+    { value: '', label: 'Todos os status' },
+    { value: 'Correto', label: 'Correto' },
+    { value: 'Fora do padrão', label: 'Fora do padrão' },
+    { value: 'Sem justificativa', label: 'Sem justificativa' },
+    { value: 'Pendente aprovação', label: 'Pendente aprovação' },
+  ]
+
+  // Filtragem dos timeEntries
+  const filteredEntries = useMemo(() => {
+    return timeEntries.filter(entry => {
+      // Filtro por data
+      const entryDate = entry.date.split('T')[0] // Assume formato ISO
+      if (filters.startDate && entryDate < filters.startDate) return false
+      if (filters.endDate && entryDate > filters.endDate) return false
+      // Filtro por usuário
+      if (filters.userId && String(entry.userId) !== filters.userId) return false
+      // Filtro por status
+      if (filters.status && entry.status !== filters.status) return false
+      return true
+    })
+  }, [timeEntries, filters])
 
   if (isLoading) {
     return (
@@ -43,42 +101,96 @@ export const TimeEntriesList: React.FC<TimeEntriesListProps> = ({
     )
   }
 
-  if (timeEntries.length === 0) {
-    return (
-      <div className="space-y-4">
-        <h3 className="text-xl font-semibold text-foreground">Histórico de Pontos</h3>
-        <Card className="p-8 text-center">
-          <p className="text-muted-foreground">Nenhum ponto registrado ainda.</p>
-        </Card>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-4 py-8">
       <h3 className="text-xl font-semibold text-foreground">Histórico de Pontos</h3>
 
-      {/* Filtros
-      <div className="flex justify-around pb-4">
-        <div className='flex flex-col items-center space-x-2'>
-          <h4 className="font-medium text-foreground"> Data Inicial </h4>
-          <DatePicker
-            onChange={() => console.log(1)}
-            value={}
-          />
+      {/* Filtros */}
+      <Card className="mb-4">
+        <div className="p-6">
+          <h4 className="text-sm font-semibold mb-4">Filtros</h4>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <Label htmlFor="startDate">Data Inicial</Label>
+              <Input
+                id="startDate"
+                type="date"
+                value={filters.startDate}
+                onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="endDate">Data Final</Label>
+              <Input
+                id="endDate"
+                type="date"
+                value={filters.endDate}
+                onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label>Usuário</Label>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start">
+                    {filters.userId 
+                      ? users.find(u => String(u.id) === filters.userId)?.name || 'Selecione um usuário'
+                      : 'Todos os usuários'
+                    }
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56">
+                  <DropdownMenuItem onClick={() => setFilters(prev => ({ ...prev, userId: '' }))}>
+                    Todos os usuários
+                  </DropdownMenuItem>
+                  {users.map(user => (
+                    <DropdownMenuItem
+                      key={user.id}
+                      onClick={() => setFilters(prev => ({ ...prev, userId: String(user.id) }))}>
+                      {user.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <div>
+              <Label>Status</Label>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start">
+                    {filters.status 
+                      ? statusOptions.find(s => s.value === filters.status)?.label
+                      : 'Todos os status'
+                    }
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56">
+                  {statusOptions.map(status => (
+                    <DropdownMenuItem
+                      key={status.value}
+                      onClick={() => setFilters(prev => ({ ...prev, status: status.value }))}>
+                      {status.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
         </div>
-        <div className='flex flex-col items-center space-x-2'>
-          <h4 className="font-medium text-foreground"> Data Final </h4>
-          <DatePicker
-            onChange={() => console.log(1)}
-            value={}
-          />
-        </div>
-      </div> */}
+      </Card>
 
-      
-      <div className="space-y-3 max-h-60 overflow-auto">
-        {timeEntries.map((entry) => {
+      <div className="space-y-3 max-h-96 overflow-auto">
+
+        {filteredEntries.length === 0 && (
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold text-foreground">Histórico de Pontos</h3>
+            <Card className="p-8 text-center">
+              <p className="text-muted-foreground">Nenhum ponto registrado ainda.</p>
+            </Card>
+          </div>
+        )}
+        
+        {filteredEntries.length !== 0 && filteredEntries.map((entry) => {
           // Definir cor do status
           let statusColor = 'text-muted-foreground bg-muted';
           if (entry.status === 'Correto') statusColor = 'text-green-600 bg-green-50 border border-green-200';
