@@ -234,7 +234,7 @@ const GerenciamentoPage: NextPageWithLayout = () => {
         ? API_ROUTES.REPORTS.TEAM_MONTHLY(reportFilters.teamId)
         : API_ROUTES.REPORTS.ORGANIZATION_MONTHLY()
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${reportUrl}?year=${reportFilters.year}&month=${reportFilters.month}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'localhost:3001'}${reportUrl}?year=${reportFilters.year}&month=${reportFilters.month}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth-token')}`

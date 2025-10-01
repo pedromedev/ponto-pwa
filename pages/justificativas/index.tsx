@@ -18,7 +18,7 @@ const JustificationPage = () => {
 
     const loadAvailableUsers = useCallback(async () => {
         try {
-
+            
             if (!user) {
                 console.error("Usuário não logado")
                 return

@@ -55,7 +55,6 @@ interface JustificationsAdminProps {
 const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUsers }) => {
   const { user, isLoading: isAuthLoading } = useAuth()  
   const [isManager, setIsManager] = useState<boolean>(false)
-  console.log("availableUsers:", availableUsers)
 
   const [justifications, setJustifications] = useState<Justification[]>([]);
   const [allJustifications, setAllJustifications] = useState<Justification[]>([]);
@@ -77,16 +76,13 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
-  const loadJustifications = useCallback(async () => {
+  const loadJustifications = async () => {
 
     if (!user) return
 
     try {
       setIsLoadingJustifications(true);
       const params = new URLSearchParams();
-
-      if (justificationFilters.startDate) params.append('startDate', justificationFilters.startDate);
-      if (justificationFilters.endDate) params.append('endDate', justificationFilters.endDate);
 
       if (user.role === 'MANAGER') {
         if (justificationFilters.userId) params.append('userId', justificationFilters.userId.toString());
@@ -98,14 +94,13 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
 
       const data = await api.get<Justification[]>(`${API_ROUTES.JUSTIFICATIONS.ALL}?${params.toString()}`, true);
       setAllJustifications(data);
-      // O filtro de status é feito no useEffect acima
     } catch (error) {
       console.error('Erro ao carregar justificativas:', error);
       toast.error('Erro ao carregar justificativas');
     } finally {
       setIsLoadingJustifications(false);
     }
-  }, [justificationFilters, user]);
+  };
 
   const handleApproveJustification = async (id: number) => {
 
@@ -168,23 +163,33 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
     }));
 
     loadJustifications()
-  }, [loadJustifications, isAuthLoading, user]);
-  
+  }, [isAuthLoading, user]);
 
-  useEffect(() => {
-    loadJustifications();
-  }, [justificationFilters.startDate, justificationFilters.endDate, justificationFilters.userId, loadJustifications]);
-
-
-  // Filtra por status no front
+  // Filtra no front
   useEffect(() => {
     setCurrentPage(1); // Sempre volta para a primeira página ao filtrar
-    if (!justificationFilters.status || justificationFilters.status === 'ALL') {
-      setJustifications(allJustifications);
-    } else {
-      setJustifications(allJustifications.filter(j => j.status === justificationFilters.status));
+    let filtered = allJustifications;
+
+    // Filtro por status
+    if (justificationFilters.status && justificationFilters.status !== 'ALL') {
+      filtered = filtered.filter(j => j.status === justificationFilters.status);
     }
-  }, [justificationFilters.status, allJustifications]);
+
+    // Filtro por usuário (apenas para manager)
+    if (justificationFilters.userId) {
+      filtered = filtered.filter(j => j.userId === justificationFilters.userId);
+    }
+
+    // Filtro por data
+    if (justificationFilters.startDate) {
+      filtered = filtered.filter(j => new Date(j.timeEntry.date) >= new Date(justificationFilters.startDate!));
+    }
+    if (justificationFilters.endDate) {
+      filtered = filtered.filter(j => new Date(j.timeEntry.date) <= new Date(justificationFilters.endDate!));
+    }
+
+    setJustifications(filtered);
+  }, [justificationFilters, allJustifications]);
 
 
   return (
