@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -8,7 +8,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Team, TeamMember, User, AddMemberRequest } from '@/types/management'
+import { Team, TeamMember, AddMemberRequest } from '@/types/management'
+import { User } from '@/types/user'
 import { api } from '@/lib/api'
 import { API_ROUTES } from '@/lib/constants'
 import { toast } from 'sonner'
@@ -26,13 +27,7 @@ const TeamMembersModal = ({ team, isOpen, onClose, availableUsers, onUpdate }: T
   const [members, setMembers] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    if (isOpen && team) {
-      loadTeamMembers()
-    }
-  }, [isOpen, team])
-
-  const loadTeamMembers = async () => {
+  const loadTeamMembers = useCallback(async () => {
     try {
       // Tenta carregar membros do backend
       const data = await api.get<any>(API_ROUTES.ORGANIZATION.TEAM_MEMBERS(team.id), true)
@@ -52,7 +47,7 @@ const TeamMembersModal = ({ team, isOpen, onClose, availableUsers, onUpdate }: T
         toast.error('Erro ao carregar membros da equipe')
       }
     }
-  }
+  }, [team])
 
   const handleAddMember = async (userId: number) => {
     setLoading(true)
@@ -114,6 +109,12 @@ const TeamMembersModal = ({ team, isOpen, onClose, availableUsers, onUpdate }: T
   // Separar por role para melhor organização
   const managersAvailable = Array.isArray(usersNotInTeam) ? usersNotInTeam.filter(user => user.role === 'MANAGER') : []
   const membersAvailable = Array.isArray(usersNotInTeam) ? usersNotInTeam.filter(user => user.role === 'MEMBER') : []
+
+  useEffect(() => {
+    if (isOpen && team) {
+      loadTeamMembers()
+    }
+  }, [isOpen, team, loadTeamMembers])
 
   if (!isOpen) return null
 
@@ -238,7 +239,7 @@ const TeamMembersModal = ({ team, isOpen, onClose, availableUsers, onUpdate }: T
                   <CardContent className="p-6 text-center">
                     <p className="text-muted-foreground">Nenhum membro na equipe</p>
                     <p className="text-xs text-muted-foreground mt-2">
-                      Use o botão "Adicionar Membro" acima para adicionar pessoas à equipe
+                      Use o botão Adicionar Membro acima para adicionar pessoas à equipe
                     </p>
                   </CardContent>
                 </Card>

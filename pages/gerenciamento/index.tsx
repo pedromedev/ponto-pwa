@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { NextPageWithLayout } from '@/pages/_app'
 import Page from '@/components/page'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -76,30 +76,7 @@ const GerenciamentoPage: NextPageWithLayout = () => {
     teamId: null
   })
 
-  useEffect(() => {
-    loadInitialData()
-  }, [])
-
-  const loadInitialData = async () => {
-    setInitialLoading(true)
-    try {
-      // Carregar todos os dados em paralelo
-      await Promise.all([
-        loadStats(),
-        loadTeams(),
-        loadInvitations(),
-        loadAvailableUsers(),
-        loadDashboardEntries()
-      ])
-    } catch (error) {
-      console.error('Erro ao carregar dados iniciais:', error)
-      toast.error('Erro ao carregar dados do sistema')
-    } finally {
-      setInitialLoading(false)
-    }
-  }
-
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       const data = await api.get<OrganizationStats>(API_ROUTES.MANAGEMENT.STATS, true)
       setStats(data)
@@ -107,9 +84,9 @@ const GerenciamentoPage: NextPageWithLayout = () => {
       console.error('Erro ao carregar estatísticas:', error)
       toast.error('Erro ao carregar estatísticas')
     }
-  }
+  }, [])
 
-  const loadTeams = async () => {
+  const loadTeams = useCallback(async () => {
     try {
       const data = await api.get<Team[]>(API_ROUTES.ORGANIZATION.TEAMS(), true)
       setTeams(data)
@@ -117,9 +94,9 @@ const GerenciamentoPage: NextPageWithLayout = () => {
       console.error('Erro ao carregar equipes:', error)
       toast.error('Erro ao carregar equipes')
     }
-  }
+  }, [])
 
-  const loadInvitations = async () => {
+  const loadInvitations = useCallback(async () => {
     try {
       const data = await api.get<Invitation[]>(API_ROUTES.MANAGEMENT.INVITATIONS, true)
       setInvitations(data)
@@ -127,9 +104,9 @@ const GerenciamentoPage: NextPageWithLayout = () => {
       console.error('Erro ao carregar convites:', error)
       toast.error('Erro ao carregar convites')
     }
-  }
+  }, [])
 
-  const loadDashboardEntries = async () => {
+  const loadDashboardEntries = useCallback(async () => {
     try {
       const data = await api.get<TimeEntryWithUserResponse[]>(API_ROUTES.TIME_ENTRY.ORGANIZATION(DEFAULT_ORGANIZATION_ID), true)
       setTimeEntriesWithUser(data)
@@ -137,9 +114,9 @@ const GerenciamentoPage: NextPageWithLayout = () => {
       console.error('Erro ao carregar entradas do dashboard:', error)
       toast.error('Erro ao carregar entradas do dashboard')
     }
-  }
+  }, [])
 
-  const loadAvailableUsers = async () => {
+  const loadAvailableUsers = useCallback(async () => {
     try {
       const data = await api.get<User[]>(API_ROUTES.MANAGEMENT.AVAILABLE_USERS, true)
       setAvailableUsers(data)
@@ -147,7 +124,7 @@ const GerenciamentoPage: NextPageWithLayout = () => {
       console.error('Erro ao carregar usuários:', error)
       toast.error('Erro ao carregar usuários')
     }
-  }
+  }, [])
 
   const handleCreateTeam = async () => {
     if (!teamForm.name || !teamForm.managerId) {
@@ -331,6 +308,28 @@ const GerenciamentoPage: NextPageWithLayout = () => {
     setInviteForm({ email: '', name: '', role: 'MEMBER' })
   }
 
+  const loadInitialData = useCallback(async () => {
+    setInitialLoading(true)
+    try {
+      await Promise.all([
+        loadStats(),
+        loadTeams(),
+        loadInvitations(),
+        loadAvailableUsers(),
+        loadDashboardEntries()
+      ])
+    } catch (error) {
+      console.error('Erro ao carregar dados iniciais:', error)
+      toast.error('Erro ao carregar dados do sistema')
+    } finally {
+      setInitialLoading(false)
+    }
+  }, [loadStats, loadTeams, loadInvitations, loadAvailableUsers, loadDashboardEntries])
+
+  useEffect(() => {
+    loadInitialData()
+  }, [loadInitialData])
+
   if (initialLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -379,7 +378,7 @@ const GerenciamentoPage: NextPageWithLayout = () => {
             <div>
               <h2 className="text-2xl font-bold">Gerenciamento de Equipes</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Clique no botão "Membros" de cada equipe para adicionar ou remover pessoas
+                Clique no botão Membros de cada equipe para adicionar ou remover pessoas
               </p>
             </div>
             <Button onClick={() => setShowTeamForm(true)}>

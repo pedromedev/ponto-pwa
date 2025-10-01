@@ -36,7 +36,7 @@ const Login: NextPageWithLayout = () => {
             const result = await login(email, password)
             if(result) clearForm()
             // Redirecionar ou mostrar sucesso
-        } catch (err) {
+        } catch (err: any) {
             // Tratar erro
             setError(`${err.message}`)
             console.error('Erro durante o login:', error)

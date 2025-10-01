@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/auth'
 import { API_ROUTES } from '@/lib/constants'
 import { User } from '@/types/user'
 import { Loader2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { toast } from 'sonner'
 
 const JustificationPage = () => {
@@ -16,13 +16,7 @@ const JustificationPage = () => {
     const [availableUsers, setAvailableUsers] = useState<User[]>([])
     const [initialLoading, setInitialLoading] = useState(true)
 
-    useEffect(() => {
-        if(!user || isAuthLoading) return
-        loadInitialData()
-        
-    }, [user, isAuthLoading])
-
-    const loadAvailableUsers = async () => {
+    const loadAvailableUsers = useCallback(async () => {
         try {
 
             if (!user) {
@@ -41,12 +35,11 @@ const JustificationPage = () => {
             console.error('Erro ao carregar usuários:', error)
             toast.error('Erro ao carregar usuários')
         }
-    }
+    }, [user])
 
-    const loadInitialData = async () => {
+    const loadInitialData = useCallback(async () => {
         setInitialLoading(true)
         try {
-            // Carregar todos os dados em paralelo
             await Promise.all([
                 loadAvailableUsers(),
             ])
@@ -56,7 +49,12 @@ const JustificationPage = () => {
         } finally {
             setInitialLoading(false)
         }
-    }
+    }, [loadAvailableUsers])
+
+    useEffect(() => {
+        if(!user || isAuthLoading) return
+        loadInitialData()
+    }, [user, isAuthLoading, loadInitialData])
 
     if (initialLoading) {
         return (

@@ -32,7 +32,7 @@ interface TimesheetEmployee {
 }
 
 interface TimesheetOverviewProps {
-  externalStats?: { totalTeams: number, timeEntries: TimeEntryWithUserResponse[]; };
+  externalStats: { totalTeams: number, timeEntries: TimeEntryWithUserResponse[]; };
 }
 
 const Dashboard: React.FC<TimesheetOverviewProps> = ({ externalStats }) => {
@@ -104,7 +104,7 @@ const Dashboard: React.FC<TimesheetOverviewProps> = ({ externalStats }) => {
     })
 
     return calculatedEntriesByUser;
-  }, [externalStats?.timeEntries]);
+  }, [externalStats]);
   
   const overviewStats = useMemo(() => {
 

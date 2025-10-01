@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -77,49 +77,7 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
-
-  // Define isManager e filtros iniciais apenas quando user estiver pronto
-  useEffect(() => {
-    if (isAuthLoading || !user) return;
-
-    const isUserManager = user.role === 'MANAGER';
-    setIsManager(isUserManager);
-
-    // Primeiro e último dia do mês atual
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    const format = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-
-    setJustificationFilters(prev => ({
-      ...prev,
-      startDate: format(firstDay),
-      endDate: format(lastDay),
-      userId: null,
-      status: null,
-    }));
-
-    loadJustifications()
-  }, [isAuthLoading, user]);
-  
-
-  useEffect(() => {
-    loadJustifications();
-  }, [justificationFilters.startDate, justificationFilters.endDate, justificationFilters.userId]);
-
-
-  // Filtra por status no front
-  useEffect(() => {
-    setCurrentPage(1); // Sempre volta para a primeira página ao filtrar
-    if (!justificationFilters.status || justificationFilters.status === 'ALL') {
-      setJustifications(allJustifications);
-    } else {
-      setJustifications(allJustifications.filter(j => j.status === justificationFilters.status));
-    }
-  }, [justificationFilters.status, allJustifications]);
-
-  const loadJustifications = async () => {
+  const loadJustifications = useCallback(async () => {
 
     if (!user) return
 
@@ -147,7 +105,7 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
     } finally {
       setIsLoadingJustifications(false);
     }
-  };
+  }, [justificationFilters, user]);
 
   const handleApproveJustification = async (id: number) => {
 
@@ -186,6 +144,48 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
   const formatDateTime = (dateTime?: string) => {
     return dateTime ? new Date(dateTime).toLocaleString('pt-BR') : 'Não registrado';
   };
+
+  // Define isManager e filtros iniciais apenas quando user estiver pronto
+  useEffect(() => {
+    if (isAuthLoading || !user) return;
+
+    const isUserManager = user.role === 'MANAGER';
+    setIsManager(isUserManager);
+
+    // Primeiro e último dia do mês atual
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const format = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+    setJustificationFilters(prev => ({
+      ...prev,
+      startDate: format(firstDay),
+      endDate: format(lastDay),
+      userId: null,
+      status: null,
+    }));
+
+    loadJustifications()
+  }, [loadJustifications, isAuthLoading, user]);
+  
+
+  useEffect(() => {
+    loadJustifications();
+  }, [justificationFilters.startDate, justificationFilters.endDate, justificationFilters.userId, loadJustifications]);
+
+
+  // Filtra por status no front
+  useEffect(() => {
+    setCurrentPage(1); // Sempre volta para a primeira página ao filtrar
+    if (!justificationFilters.status || justificationFilters.status === 'ALL') {
+      setJustifications(allJustifications);
+    } else {
+      setJustifications(allJustifications.filter(j => j.status === justificationFilters.status));
+    }
+  }, [justificationFilters.status, allJustifications]);
+
 
   return (
     <div className="space-y-4">

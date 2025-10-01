@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,11 +20,7 @@ const TimeEntriesAdmin: React.FC<TimeEntriesAdminProps> = ({ organizationId }) =
   const [isLoading, setIsLoading] = useState(true);
   const [loadingAction, setLoadingAction] = useState<number | null>(null);
 
-  useEffect(() => {
-    loadEntries();
-  }, [organizationId]);
-
-  const loadEntries = async () => {
+  const loadEntries = useCallback(async () => {
     setIsLoading(true);
     try {
       // Buscar apenas registros retroativos pendentes de aprovação
@@ -35,7 +31,7 @@ const TimeEntriesAdmin: React.FC<TimeEntriesAdminProps> = ({ organizationId }) =
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [organizationId]);
 
   const handleApprove = async (id: number) => {
     setLoadingAction(id);
@@ -92,6 +88,10 @@ const TimeEntriesAdmin: React.FC<TimeEntriesAdminProps> = ({ organizationId }) =
       setLoadingAction(null);
     }
   };
+
+  useEffect(() => {
+    loadEntries();
+  }, [organizationId, loadEntries]);
 
   return (
     <div className="space-y-4">

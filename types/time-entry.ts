@@ -56,6 +56,7 @@ export interface TimeEntryData {
 export interface TimeEntryResponse {
   id: number
   userId: number
+  userName: string
   organizationId: number
   date: string
   clockIn: string | null

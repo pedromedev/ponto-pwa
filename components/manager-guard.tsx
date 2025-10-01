@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -14,11 +14,7 @@ const ManagerGuard = ({ children }: ManagerGuardProps) => {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
 
-  useEffect(() => {
-    checkManagerPermission()
-  }, [])
-
-  const checkManagerPermission = async () => {
+  const checkManagerPermission = useCallback(async () => {
     try {
       // Verificar se o usuário está autenticado
       const token = localStorage.getItem('auth-token')
@@ -47,11 +43,15 @@ const ManagerGuard = ({ children }: ManagerGuardProps) => {
       console.error('Erro ao verificar permissões:', error)
       router.push('/auth/login')
     }
-  }
+  }, [router])
 
   const handleGoBack = () => {
     router.push('/')
   }
+
+  useEffect(() => {
+    checkManagerPermission()
+  }, [checkManagerPermission])
 
   // Loading state
   if (isAuthorized === null) {

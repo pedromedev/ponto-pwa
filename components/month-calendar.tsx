@@ -69,7 +69,7 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
     setReferencMonth(addMonths(referenceMonth, 1))
   }
 
-  const getDayStyles = (date: Date, marker?: DayMarker) => {
+  const getDayStyles = (date: Date, marker?: DayMarker): any => {
     
     const baseStyles = 'h-10 w-10 rounded-full flex items-center justify-center text-sm'
     
@@ -81,7 +81,7 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
       return cn(baseStyles, 'hover:bg-accent cursor-pointer')
     }
 
-    const statusStyles = {
+    const statusStyles: Record<string, string> = {
       'Correto': 'bg-green-100 text-green-700 hover:bg-green-200',
       'Aprovado': 'bg-green-100 text-green-700 hover:bg-green-200',
       'Reprovado': 'bg-red-100 text-red-700 hover:bg-red-200',
@@ -91,7 +91,9 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
       'Incompleto': 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200',
     }
 
-    return cn(baseStyles, statusStyles[marker.status], 'cursor-pointer')
+    const retorno = statusStyles[marker.status as keyof typeof statusStyles]
+
+    return cn(baseStyles, retorno, 'cursor-pointer')
   }
 
   return (

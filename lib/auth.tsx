@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
 import { api } from './api'
 import { User, AuthContextType } from '@/types/user'
 import { useRouter } from 'next/router'
@@ -16,29 +16,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true)
   const { setError } = useLoginFormStore()
   const router = useRouter()
-
-  // Verificar se o usuário está logado ao carregar a aplicação
-  useEffect(() => {
-    const checkAuth = () => {
-      try {
-        const authToken = localStorage.getItem('auth-token')
-        const userData = localStorage.getItem('user-data')
-        if (authToken && userData) {
-          setUser(JSON.parse(userData))
-          setIsAuthenticated(true)
-          // Definir cookie para o middleware
-          document.cookie = `auth-token=${authToken}; path=/; max-age=${60 * 60 * 24 * 7}` // 7 dias
-        }
-      } catch (error) {
-        console.error('Erro ao verificar autenticação:', error)
-        logout()
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    checkAuth()
-  }, [])
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true)
@@ -63,7 +40,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       router.push('/')
       
       return true
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro durante o login:', error)
       setError(`${error.message}`)
       return false
@@ -89,7 +66,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       const refreshToken = localStorage.getItem('refresh-token')
       
@@ -116,7 +93,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Redirecionar para login
       router.push('/auth/login')
     }
-  }
+  }, [router])
+
+  // Verificar se o usuário está logado ao carregar a aplicação
+  useEffect(() => {
+    try {
+      const authToken = localStorage.getItem('auth-token')
+      const userData = localStorage.getItem('user-data')
+      if (authToken && userData) {
+        setUser(JSON.parse(userData))
+        setIsAuthenticated(true)
+        document.cookie = `auth-token=${authToken}; path=/; max-age=${60 * 60 * 24 * 7}`
+      }
+    } catch (error) {
+      console.error('Erro ao verificar autenticação:', error)
+      logout()
+    } finally {
+      setIsLoading(false)
+    }
+  }, [logout])
 
   return (
     <AuthContext.Provider
