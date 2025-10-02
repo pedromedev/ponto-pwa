@@ -93,12 +93,12 @@ const Login: NextPageWithLayout = () => {
                         {isSubmitting ? 'Entrando...' : 'Entrar'}
                     </Button>
                 </form>
-                <div className="text-center text-sm text-muted-foreground">
+                {/* <div className="text-center text-sm text-muted-foreground">
                     Não tem uma conta?{' '}
                     <Link href="/auth/register" className="text-primary hover:underline">
                         Cadastre-se
                     </Link>
-                </div>
+                </div> */}
             </CardContent>
         </Card>
     )
