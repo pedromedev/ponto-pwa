@@ -111,7 +111,7 @@ const Dashboard: React.FC<TimesheetOverviewProps> = ({ externalStats }) => {
     let totalEmployees = 0;let activeEmployees = 0;let totalDaysWorked = 0;let totalHoursWorked = 0
     let totalAbsences = 0;let avgHours = 0;let employeesWithNegativeBalance = 0;let employeesWithPositiveBalance = 0
 
-    totalEmployees = employeeData.length;
+    totalEmployees = employeeData.filter(emp => emp.role === 'MEMBER').length;
     activeEmployees = employeeData.filter(emp => emp.status === 'Ativo').length;
     totalDaysWorked = employeeData.reduce((sum, emp) => sum + emp.daysWorked, 0);
     totalHoursWorked = employeeData.reduce((sum, emp) => sum + emp.hoursWorked, 0);
@@ -148,7 +148,7 @@ const Dashboard: React.FC<TimesheetOverviewProps> = ({ externalStats }) => {
             <div className="text-sm text-slate-400">Total de Equipes</div>
             <Users className="h-4 w-4 text-slate-400" />
           </div>
-          <div className="text-3xl font-bold text-white">{externalStats?.totalTeams || 7}</div>
+          <div className="text-3xl font-bold text-white">{externalStats?.totalTeams || 0}</div>
         </div>
 
         <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
@@ -192,10 +192,10 @@ const Dashboard: React.FC<TimesheetOverviewProps> = ({ externalStats }) => {
               <span className="text-slate-400">Média de horas por dia:</span>
               <span className="font-semibold text-white">{formatHours(overviewStats.avgHours)}</span>
             </div>
-            <div className="flex justify-between">
+            {/* <div className="flex justify-between">
               <span className="text-slate-400">Saldo acumulado:</span>
               <span className="font-semibold text-red-400">-9h25m</span>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -212,7 +212,7 @@ const Dashboard: React.FC<TimesheetOverviewProps> = ({ externalStats }) => {
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Funcionários ativos no período:</span>
-              <span className="font-semibold text-green-400">1</span>
+              <span className="font-semibold text-green-400">{overviewStats.activeEmployees}</span>
             </div>
           </div>
         </div>
