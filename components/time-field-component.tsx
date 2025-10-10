@@ -27,6 +27,8 @@ export const TimeFieldComponent: React.FC<TimeFieldComponentProps> = ({
   onJustificationChange
 }) => {
 
+  console.log("field:", field)
+
   const label = FIELD_LABELS[fieldName]
   const justificationOptions = [
     'Licença maternidade/paternidade',

@@ -73,7 +73,6 @@ const RetroativoPage = () => {
   const initializeFormWithEntry = (foundEntry: TimeEntryResponse, dateStr: string) => {
     
     if (foundEntry.clockIn && foundEntry.lunchStart && foundEntry.lunchEnd && foundEntry.clockOut) {
-      toast.error('Não é possível modificar um registro já completo')
       setIsCompletedRegister(true)
     } else {
       setIsCompletedRegister(false)
@@ -300,6 +299,15 @@ const RetroativoPage = () => {
     }
   }
 
+  function handleTimeEntryClick(entry: TimeEntryResponse): void {
+    setDateParam(entry.date.split('T')[0])
+    
+    // Scroll para o topo da página
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    
+    toast.success('Registro selecionado com sucesso')
+  }
+
   return (
     <AuthGuard>
       <Page>
@@ -328,7 +336,7 @@ const RetroativoPage = () => {
 
             { !isManager && (
               <Card className="p-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form id='retroativo-form' onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="date">Data</Label>
                   <DatePicker
@@ -401,6 +409,7 @@ const RetroativoPage = () => {
             )}
           </div>
           <TimeEntriesList
+            onClick={handleTimeEntryClick}
             timeEntries={timeEntries}
             isLoading={false}
           />

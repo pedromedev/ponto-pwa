@@ -17,12 +17,14 @@ import { useTimeEntry } from '@/hooks/use-time-entry'
 import { DatePicker } from './ui/date-picker'
 
 interface TimeEntriesListProps {
+  onClick: (entry: TimeEntryResponse) => void
   timeEntries: TimeEntryResponse[],
   isLoading: boolean,
   users?: { id: string, name: string }[]
 }
 
-export const TimeEntriesList: React.FC<TimeEntriesListProps> = ({
+export const TimeEntriesList: React.FC<TimeEntriesListProps> = ({ 
+  onClick,
   timeEntries,
   isLoading,
   users = []
@@ -199,7 +201,7 @@ export const TimeEntriesList: React.FC<TimeEntriesListProps> = ({
           else if (entry.status === 'Pendente aprovação') statusColor = 'text-orange-600 bg-orange-50 border border-orange-200';
 
           return (
-            <Card key={entry.id} className="p-4">
+            <Card key={entry.id} className="p-4 cursor-pointer" onClick={() => onClick(entry)}>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <div className="flex flex-col">

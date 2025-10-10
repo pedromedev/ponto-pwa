@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { TodayTimeEntryResponse, FieldName, FIELD_LABELS } from '@/types/time-entry'
 
@@ -22,6 +22,7 @@ export const TodayTimeEntryStatus: React.FC<TodayTimeEntryStatusProps> = ({
   currentWorkedHours,
   hasAnyTime
 }) => {
+
   if (isLoading) {
     return (
       <Card className="p-4">
