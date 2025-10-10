@@ -377,14 +377,31 @@ export const useTimeEntry = () => {
   // Registrar ponto individual usando o novo endpoint
   const handleFieldClick = async (fieldName: FieldName): Promise<void> => {
 
-    const todayDate = new Date();
-    const referenceDate = todayEntry?.date ? new Date(todayEntry.date) : new Date('Invalid Date');
+    const todayDate = new Date().toISOString()
+
+    const referenceToday = todayDate.split('T')[0]
+    const referenceDate = todayEntry?.date ? todayEntry?.date.split('T')[0] : new Date('Invalid Date').toISOString().split('T')[0];
 
     const isRegistrationCompleted = Object.values(fields).every(field => field.isJustified);
     const isFieldHasValue = fields[fieldName].value !== undefined && fields[fieldName].value !== null;
-    const isSameDate = todayDate.toDateString() === referenceDate.toDateString(); // Compare only year, month, day
+    const isSameDate = referenceToday === referenceDate; // Compare only year, month, day
 
-    if (isFieldHasValue || isRegistrationCompleted || !user || isSubmitting[fieldName] || isSameDate) {
+    if (!isSameDate) {
+      toast.error("Não é possível registrar o ponto para uma data diferente da data atual")
+      return
+    }
+
+    if (isFieldHasValue) {
+      toast.error("Horário já registrado")
+      return
+    }
+
+    if (isRegistrationCompleted) {
+      toast.error("Registro de horário já está completo")
+      return
+    }
+    
+    if (!user || isSubmitting[fieldName]) {
       return;
     }
     
@@ -395,7 +412,7 @@ export const useTimeEntry = () => {
         userId: user.id,
         organizationId: DEFAULT_ORGANIZATION_ID,
         timeType: fieldName,
-        timestamp: todayDate.toISOString()
+        timestamp: todayDate
       }
       
       await api.post(API_ROUTES.TIME_ENTRY.PUNCH, punchData, true)
