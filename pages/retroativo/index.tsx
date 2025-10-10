@@ -112,6 +112,7 @@ const RetroativoPage = () => {
           initializeFormWithEntry(timeEntriesFiltered[0], formattedDate)
         } else {
           // Se não encontrar entry, pelo menos definir a data
+          
           setFormData(prev => ({
             ...prev,
             date: formattedDate
@@ -137,6 +138,7 @@ const RetroativoPage = () => {
       
       if (timeEntriesFiltered.length === 0) {
         // Limpar entry e campos de tempo, mas manter a data
+        setIsCompletedRegister(false)
         setEntry(undefined)
         setFormData(prev => ({
           ...prev,
@@ -204,7 +206,8 @@ const RetroativoPage = () => {
       const timeEntryData: CreateTimeEntryDto = {
         userId: user?.id || 0,
         organizationId: DEFAULT_ORGANIZATION_ID,
-        date: selectedDate
+        date: selectedDate,
+        saldoDoDia: 0.0
       }
 
       if (formData.clockIn) {
