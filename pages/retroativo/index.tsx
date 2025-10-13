@@ -119,7 +119,8 @@ const RetroativoPage = () => {
           }))
         }
       } catch (error) {
-        console.error('Erro ao processar dateParam:', error)
+        console.log('Erro ao processar dateParam:', error)
+        toast.error('Erro ao processar a data selecionada')
       }
     }
   }, [timeEntries, dateParam])

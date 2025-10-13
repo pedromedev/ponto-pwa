@@ -380,7 +380,7 @@ export const useTimeEntry = () => {
     const todayDate = new Date().toISOString()
 
     const referenceToday = todayDate.split('T')[0]
-    const referenceDate = todayEntry?.date ? todayEntry?.date.split('T')[0] : new Date('Invalid Date').toISOString().split('T')[0];
+    const referenceDate = todayEntry?.date ? todayEntry?.date.split('T')[0] : new Date().toISOString().split('T')[0];
 
     const isRegistrationCompleted = Object.values(fields).every(field => field.isJustified);
     const isFieldHasValue = fields[fieldName].value !== undefined && fields[fieldName].value !== null;
@@ -432,6 +432,7 @@ export const useTimeEntry = () => {
       await fetchTimeEntriesPerMonth()
       
     } catch (error: any) {
+      console.log('error', error)
       toast.error(`${MESSAGES.ERROR.PUNCH_ERROR(fieldName)}: ${error.message}`)
     } finally {
       setIsSubmitting(prev => ({ ...prev, [fieldName]: false }))
