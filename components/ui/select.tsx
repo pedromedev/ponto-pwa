@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 
 interface JustificationSelectProps {
   value: string
@@ -6,32 +6,53 @@ interface JustificationSelectProps {
   disabled?: boolean
   placeholder?: string
   className?: string
+  userRole?: 'MANAGER' | 'MEMBER'
 }
 
 const JUSTIFICATION_OPTIONS = [
-  'Licença maternidade/paternidade',
-  'Licença casamento',
-  'Licença luto',
-  'Doação de sangue',
-  'Convocação judicial/militar',
-  'Atestado médico',
-  'Consulta médica/odontológica',
-  'Doença em família',
+  'Esquecimento',
+  'Atraso justificado',
+  'Saída antecipada',
+  'Médico/Odontólogo',
+  'Compromisso acadêmico',
   'Falecimento de familiar',
-  'Atraso de transporte público/trânsito',
-  'Compromisso pessoal previamente autorizado',
-  'Compromisso acadêmico (prova, aula, etc.)',
-  'Home office (quando não estava previsto)',
-  'Férias'
+  'Casamento',
+  'Doação de sangue',
+  'Comparecimento judicial/eleitoral',
+  'Treinamento/Reunião interna',
+  'Viagem a Trabalho',
+  'Falha Técnica no REP/APP',
+  'Intervalo estendido',
+  'Falta não justificada',
+  'Licença maternidade/paternidade',
+  'Atividade sindical',
+  'Acompanhamento de filho(a) em consulta',
+  'Acompanhamento de filho(a) doente',
+  'Doença em Família',
+  'Falecimento de familiar',
+  'Abono',
+  'Falta'
 ]
+
+// Opções exclusivas para administradores
+const MANAGER_ONLY_OPTIONS = ['Abono', 'Falta']
 
 export const JustificationSelect: React.FC<JustificationSelectProps> = ({
   value,
   onChange,
   disabled = false,
   placeholder = "Selecione uma justificativa...",
-  className = ""
+  className = "",
+  userRole = 'MEMBER'
 }) => {
+  // Filtrar opções baseado na role do usuário
+  const availableOptions = useMemo(() => {
+    if (userRole === 'MANAGER') {
+      return JUSTIFICATION_OPTIONS
+    }
+    return JUSTIFICATION_OPTIONS.filter(option => !MANAGER_ONLY_OPTIONS.includes(option))
+  }, [userRole])
+
   return (
     <select
       value={value}
@@ -40,7 +61,7 @@ export const JustificationSelect: React.FC<JustificationSelectProps> = ({
       disabled={disabled}
     >
       <option value="">{placeholder}</option>
-      {JUSTIFICATION_OPTIONS.map((option) => (
+      {availableOptions.map((option) => (
         <option key={option} value={option}>
           {option}
         </option>

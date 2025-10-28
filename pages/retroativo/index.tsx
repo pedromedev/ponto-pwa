@@ -380,6 +380,7 @@ const RetroativoPage = () => {
                             value={formData[`${fieldName}Justification` as keyof RetroactiveFormData]}
                             onChange={(value) => handleInputChange(`${fieldName}Justification` as keyof RetroactiveFormData, value)}
                             disabled={isSubmitting}
+                            userRole={user?.role}
                           />
 
                       </div>

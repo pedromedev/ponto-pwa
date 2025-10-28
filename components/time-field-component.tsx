@@ -30,6 +30,24 @@ export const TimeFieldComponent: React.FC<TimeFieldComponentProps> = ({
   console.log("field:", field)
 
   const label = FIELD_LABELS[fieldName]
+  
+  // Obter role do usuário do localStorage
+  const getUserRole = (): 'MANAGER' | 'MEMBER' => {
+    if (typeof window !== 'undefined') {
+      const userData = localStorage.getItem('user-data')
+      if (userData) {
+        try {
+          const user = JSON.parse(userData)
+          return user.role || 'MEMBER'
+        } catch (error) {
+          return 'MEMBER'
+        }
+      }
+    }
+    return 'MEMBER'
+  }
+
+  const userRole = getUserRole()
   const justificationOptions = [
     'Licença maternidade/paternidade',
     'Licença casamento',
@@ -114,6 +132,7 @@ export const TimeFieldComponent: React.FC<TimeFieldComponentProps> = ({
               value={field.justification}
               onChange={(value) => onJustificationChange(fieldName, value)}
               disabled={isSubmitting}
+              userRole={userRole}
             />
 
           <div className="flex gap-2 justify-end">
