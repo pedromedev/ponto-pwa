@@ -28,6 +28,7 @@ import { useTimeEntry } from '@/hooks/use-time-entry'
 import { format } from 'date-fns'
 import { JustificationSelect } from '@/components/ui/select'
 import TimeEntriesAdmin from '@/components/time-entries-admin'
+import { JustificationType } from '@/types/justifications'
 
 interface Justifications {
   clockInJustification: string,
@@ -38,9 +39,15 @@ interface Justifications {
 
 const RetroativoPage = () => {
 
+  const { 
+    timeEntries,
+    justificationTypes,
+    setTimeEntries
+  } = useTimeEntry()
+
   const { user } = useAuth()
   const isManager = user?.role === 'MANAGER'
-  const { timeEntries, setTimeEntries } = useTimeEntry()
+  
   const router = useRouter()
   const params = useSearchParams()
 
@@ -377,6 +384,7 @@ const RetroativoPage = () => {
                         <Label htmlFor={`${fieldName}Justification`}>Justificativa (opcional)</Label>
 
                         <JustificationSelect
+                            justificationOptions={justificationTypes.map((type: JustificationType) => type.justification)}
                             value={formData[`${fieldName}Justification` as keyof RetroactiveFormData]}
                             onChange={(value) => handleInputChange(`${fieldName}Justification` as keyof RetroactiveFormData, value)}
                             disabled={isSubmitting}

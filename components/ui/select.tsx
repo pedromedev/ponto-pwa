@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react'
 
 interface JustificationSelectProps {
+  justificationOptions: string[]
   value: string
   onChange: (value: string) => void
   disabled?: boolean
@@ -9,35 +10,11 @@ interface JustificationSelectProps {
   userRole?: 'MANAGER' | 'MEMBER'
 }
 
-const JUSTIFICATION_OPTIONS = [
-  'Esquecimento',
-  'Atraso justificado',
-  'Saída antecipada',
-  'Médico/Odontólogo',
-  'Compromisso acadêmico',
-  'Falecimento de familiar',
-  'Casamento',
-  'Doação de sangue',
-  'Comparecimento judicial/eleitoral',
-  'Treinamento/Reunião interna',
-  'Viagem a Trabalho',
-  'Falha Técnica no REP/APP',
-  'Intervalo estendido',
-  'Falta não justificada',
-  'Licença maternidade/paternidade',
-  'Atividade sindical',
-  'Acompanhamento de filho(a) em consulta',
-  'Acompanhamento de filho(a) doente',
-  'Doença em Família',
-  'Falecimento de familiar',
-  'Abono',
-  'Falta'
-]
-
 // Opções exclusivas para administradores
 const MANAGER_ONLY_OPTIONS = ['Abono', 'Falta']
 
 export const JustificationSelect: React.FC<JustificationSelectProps> = ({
+  justificationOptions,
   value,
   onChange,
   disabled = false,
@@ -45,13 +22,14 @@ export const JustificationSelect: React.FC<JustificationSelectProps> = ({
   className = "",
   userRole = 'MEMBER'
 }) => {
+
   // Filtrar opções baseado na role do usuário
   const availableOptions = useMemo(() => {
     if (userRole === 'MANAGER') {
-      return JUSTIFICATION_OPTIONS
+      return justificationOptions;
     }
-    return JUSTIFICATION_OPTIONS.filter(option => !MANAGER_ONLY_OPTIONS.includes(option))
-  }, [userRole])
+    return justificationOptions.filter((option: string) => !MANAGER_ONLY_OPTIONS.includes(option));
+  }, [userRole, justificationOptions])
 
   return (
     <select
@@ -61,7 +39,7 @@ export const JustificationSelect: React.FC<JustificationSelectProps> = ({
       disabled={disabled}
     >
       <option value="">{placeholder}</option>
-      {availableOptions.map((option) => (
+      {availableOptions.map((option: string) => (
         <option key={option} value={option}>
           {option}
         </option>
@@ -69,5 +47,3 @@ export const JustificationSelect: React.FC<JustificationSelectProps> = ({
     </select>
   )
 }
-
-export { JUSTIFICATION_OPTIONS }

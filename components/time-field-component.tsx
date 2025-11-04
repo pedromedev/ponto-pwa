@@ -5,7 +5,8 @@ import { TimeField, FieldName, FIELD_LABELS } from '@/types/time-entry'
 import { Loader2 } from 'lucide-react'
 import { JustificationSelect } from './ui/select'
 
-interface TimeFieldComponentProps {
+interface TimeFieldComponentProps { 
+  justificationOptions: string[]
   fieldName: FieldName
   field: TimeField
   isSubmitting: boolean
@@ -17,6 +18,7 @@ interface TimeFieldComponentProps {
 }
 
 export const TimeFieldComponent: React.FC<TimeFieldComponentProps> = ({
+  justificationOptions,
   fieldName,
   field,
   isSubmitting,
@@ -26,8 +28,6 @@ export const TimeFieldComponent: React.FC<TimeFieldComponentProps> = ({
   onJustificationCancel,
   onJustificationChange
 }) => {
-
-  console.log("field:", field)
 
   const label = FIELD_LABELS[fieldName]
   
@@ -48,22 +48,6 @@ export const TimeFieldComponent: React.FC<TimeFieldComponentProps> = ({
   }
 
   const userRole = getUserRole()
-  const justificationOptions = [
-    'Licença maternidade/paternidade',
-    'Licença casamento',
-    'Licença luto',
-    'Doação de sangue',
-    'Convocação judicial/militar',
-    'Atestado médico',
-    'Consulta médica/odontológica',
-    'Doença em família',
-    'Falecimento de familiar',
-    'Atraso de transporte público/trânsito',
-    'Compromisso pessoal previamente autorizado',
-    'Compromisso acadêmico (prova, aula, etc.)',
-    'Home office (quando não estava previsto)',
-    'Férias'
-  ];
 
   return (
     <div className="space-y-2">
@@ -129,6 +113,7 @@ export const TimeFieldComponent: React.FC<TimeFieldComponentProps> = ({
           </label>
 
            <JustificationSelect
+              justificationOptions={justificationOptions}
               value={field.justification}
               onChange={(value) => onJustificationChange(fieldName, value)}
               disabled={isSubmitting}

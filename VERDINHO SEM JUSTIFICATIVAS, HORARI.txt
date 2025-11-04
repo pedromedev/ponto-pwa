@@ -5,6 +5,8 @@ VERMELHO: SEM JUSTIFICAR, HORARIO NAO PADRÃO
 horario de compensação: 10minutos de tolerancia pra cima e pra baixo.
 (so para saida e entrada, sem almoço)
 
+horário do almoço
+
 (obs: o que não abona na justifica, vira banco de horas)
 
 ____

@@ -26,12 +26,13 @@ import {
   formatTimeBR
 } from '@/lib/date-utils'
 import { DEFAULT_ORGANIZATION_ID, API_ROUTES, MESSAGES } from '@/lib/constants'
-import { time } from 'console'
+import { JustificationType } from '@/types/justifications'
 
 export const useTimeEntry = () => {
   const { user, isLoading: isAuthLoading } = useAuth()
   const [month, setMonth ] = useState<number>(new Date().getMonth() + 1)
   const [fields, setFields] = useState<TimeEntryFields>(INITIAL_FIELDS_STATE)
+  const [justificationTypes, setJustificationTypes] = useState<JustificationType[]>([])
   const [isSubmitting, setIsSubmitting] = useState<Record<FieldName, boolean>>({
     clockIn: false,
     lunchStart: false,
@@ -49,12 +50,21 @@ export const useTimeEntry = () => {
     if (!user) return;
     fetchTodayTimeEntry();
     fetchTimeEntriesByUser();
+    fetchJustificationTypes();
   }, [isAuthLoading, user])
 
   useEffect(() => {
     getMarkersForEntries()
   }, [timeEntries])
 
+  const fetchJustificationTypes = async (): Promise<void> => {
+    try {
+      const response = await api.get<JustificationType[]>(API_ROUTES.JUSTIFICATIONS.TYPES, true)
+      setJustificationTypes(response)
+    } catch (error) {
+      console.error('Erro ao carregar tipos de justificativa:', error)
+    }
+  }
   const checkTolerancia = (date: string, clockStr: string, clockJustification: string, timeType: string): { bancoHoras: number, isJustified: boolean } => {
     // Converte data ISO 8601 em minutos totais do dia
     const timeToMinutes = (dateStr: string): number => {
@@ -520,8 +530,10 @@ export const useTimeEntry = () => {
     isLoadingEntries,
     todayEntry,
     isLoadingToday,
+    justificationTypes,
     currentWorkedHours: calculateCurrentWorkedHours(),
     setTimeEntries,
+    fetchJustificationTypes,
     calculateWorkedHours,
     handleFieldClick,
     handleJustifyClick,

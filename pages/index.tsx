@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
 import { useTimeEntry } from '@/hooks/use-time-entry'
+import { JustificationType } from '@/types/justifications'
 
 
 const FIELD_ORDER: FieldName[] = ['clockIn', 'lunchStart', 'lunchEnd', 'clockOut']
@@ -28,12 +29,13 @@ const Index = () => {
 		todayEntry,
 		isLoadingToday,
 		currentWorkedHours,
+		justificationTypes,
 		handleFieldClick,
 		handleJustifyClick,
 		handleJustificationSubmit,
 		handleJustificationCancel,
 		handleJustificationChange,
-		fetchDateSelectedTimeEntry,
+		fetchDateSelectedTimeEntry,	
 	} = useTimeEntry()
 
 	// Verificar se pelo menos a entrada foi preenchida para mostrar o cálculo
@@ -58,6 +60,7 @@ const Index = () => {
 							hasAnyTime={hasAnyTime}
 						/>
 						<TimeFieldsGrid
+							justificationOptions={justificationTypes.map((type: JustificationType) => type.justification)}
 							fields={fields}
 							fieldOrder={FIELD_ORDER}
 							isSubmitting={isSubmitting}
@@ -149,6 +152,7 @@ const ManagerQuickAccess: React.FC = () => (
 )
 
 interface TimeFieldsGridProps {
+	justificationOptions: string[]
 	fields: Record<FieldName, import('@/types/time-entry').TimeField>
 	fieldOrder: FieldName[]
 	isSubmitting: Record<FieldName, boolean>
@@ -160,6 +164,7 @@ interface TimeFieldsGridProps {
 }
 
 const TimeFieldsGrid: React.FC<TimeFieldsGridProps> = ({
+	justificationOptions,
 	fields,
 	fieldOrder,
 	isSubmitting,
@@ -172,6 +177,7 @@ const TimeFieldsGrid: React.FC<TimeFieldsGridProps> = ({
 	<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 		{fieldOrder.map(fieldName => (
 			<TimeFieldComponent
+				justificationOptions={justificationOptions}
 				key={fieldName}
 				fieldName={fieldName}
 				field={fields[fieldName]}

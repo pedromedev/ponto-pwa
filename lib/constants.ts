@@ -12,6 +12,7 @@ export const API_ROUTES = {
     BY_ID: (id: number) => `/time-entry/${id}`
   },
   JUSTIFICATIONS: {
+    TYPES: '/justification/types',
     ALL: `/justification/`,
     BY_USER: (userId: number, initialDate?: string, finalDate?: string) => {
       const params = new URLSearchParams();
