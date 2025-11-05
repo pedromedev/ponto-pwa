@@ -101,7 +101,7 @@ const TimeEntriesAdmin: React.FC<TimeEntriesAdminProps> = ({ organizationId }) =
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-4 max-h-[70vh] overflow-y-auto pr-2">
           {entries.length === 0 ? (
             <Card className="p-8 text-center">
               <p className="text-muted-foreground">Nenhum registro retroativo pendente de aprovação.</p>

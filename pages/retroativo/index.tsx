@@ -254,6 +254,7 @@ const RetroativoPage = () => {
       }
 
       if (entry && !isCompletedRegister) {    
+        timeEntryData.status = 'Pendente aprovação'
         response = await api.patch(API_ROUTES.TIME_ENTRY.BY_ID(entry.id), timeEntryData, true)
         setTimeEntries(timeEntries.map(timeEntry => 
           timeEntry.id === entry.id ? response : timeEntry

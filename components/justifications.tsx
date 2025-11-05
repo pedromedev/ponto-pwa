@@ -310,7 +310,7 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
                                 <span className="ml-2">Role: {justification.user.role}</span>
                               </CardDescription>
                               <div className="mt-2 text-sm text-muted-foreground">
-                                Justificativa: {justification.justification}
+                                Justificativa de {justification.timeType === 'CLOCK_IN' ? 'Entrada' : justification.timeType === 'LUNCH_START' ? 'Início do Almoço' : justification.timeType === 'LUNCH_END' ? 'Fim do Almoço' : 'Saída'}: {justification.justification}
                               </div>
                             </div>
                             <Tooltip>
