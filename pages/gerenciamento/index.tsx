@@ -37,15 +37,17 @@ import {
   X,
   UserCheck,
   UserX,
-  Loader2
+  Loader2,
+  ListChecks
 } from 'lucide-react'
 import TeamMembersModal from '@/components/team-members-modal'
 import ManagerGuard from '@/components/manager-guard'
 import Dashboard from '@/components/dashboard-admin'
 import { TimeEntryWithUserResponse } from '@/types/time-entry'
+import JustificationTypesAdmin from '@/components/justification-types-admin'
 
 const GerenciamentoPage: NextPageWithLayout = () => {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'teams' | 'invitations' | 'reports'>('dashboard')
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'teams' | 'invitations' | 'reports' | 'justificationTypes'>('dashboard')
   const [stats, setStats] = useState<OrganizationStats | null>(null)
   const [teams, setTeams] = useState<Team[]>([])
   const [invitations, setInvitations] = useState<Invitation[]>([])
@@ -347,8 +349,9 @@ const GerenciamentoPage: NextPageWithLayout = () => {
       <div className="flex space-x-1 bg-muted rounded-lg p-1">
         {[
           { key: 'dashboard', label: 'Dashboard', icon: Users },
-          { key: 'teams', label: 'Equipes', icon: Users },
-          { key: 'invitations', label: 'Convites', icon: Mail },
+          // { key: 'teams', label: 'Equipes', icon: Users },
+          // { key: 'invitations', label: 'Convites', icon: Mail },
+          { key: 'justificationTypes', label: 'Justificativas', icon: ListChecks },
           { key: 'reports', label: 'Relatórios', icon: Download }
         ].map(({ key, label, icon: Icon }) => (
           <button
@@ -681,6 +684,14 @@ const GerenciamentoPage: NextPageWithLayout = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* Gestão de Justificativas (Tipos) */}
+      {activeTab === 'justificationTypes' && (
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold">Gestão de Justificativas</h2>
+          <JustificationTypesAdmin />
         </div>
       )}
 

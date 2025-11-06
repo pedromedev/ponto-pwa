@@ -43,7 +43,14 @@ export const api = {
             })
             
             if (retryResponse.ok) {
-              return retryResponse.json()
+              const ct = retryResponse.headers.get('content-type') || ''
+              if (retryResponse.status === 204 || retryResponse.status === 205) {
+                return undefined as any
+              }
+              const retryText = await retryResponse.text()
+              if (!retryText) return undefined as any
+              if (ct.includes('application/json')) return JSON.parse(retryText)
+              return retryText as any
             }
           }
         }
@@ -53,11 +60,34 @@ export const api = {
       }
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido' }))
-        throw new ApiError(errorData.message || 'Erro na requisição', response.status)
+        let message = 'Erro na requisição'
+        try {
+          const contentType = response.headers.get('content-type') || ''
+          const text = await response.text()
+          if (text) {
+            if (contentType.includes('application/json')) {
+              const json = JSON.parse(text)
+              message = json.message || message
+            } else {
+              message = text
+            }
+          }
+        } catch {}
+        throw new ApiError(message, response.status)
       }
 
-      return response.json()
+      const contentType = response.headers.get('content-type') || ''
+      if (response.status === 204 || response.status === 205) {
+        return undefined as T
+      }
+      const text = await response.text()
+      if (!text) {
+        return undefined as T
+      }
+      if (contentType.includes('application/json')) {
+        return JSON.parse(text) as T
+      }
+      return text as unknown as T
     } catch (error) {
       if (error instanceof ApiError) {
         throw error

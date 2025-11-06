@@ -9,6 +9,7 @@ import { User } from '@/types/user'
 import { Loader2 } from 'lucide-react'
 import { useEffect, useState, useCallback } from 'react'
 import { toast } from 'sonner'
+import JustificationTypesAdmin from '@/components/justification-types-admin'
 
 const JustificationPage = () => {
 

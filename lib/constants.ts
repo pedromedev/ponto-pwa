@@ -13,6 +13,7 @@ export const API_ROUTES = {
   },
   JUSTIFICATIONS: {
     TYPES: '/justification/types',
+    TYPES_BY_ID: (id: number) => `/justification/types/${id}`,
     ALL: `/justification/`,
     BY_USER: (userId: number, initialDate?: string, finalDate?: string) => {
       const params = new URLSearchParams();
