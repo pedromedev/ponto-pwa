@@ -92,6 +92,9 @@ export const formatMinutesToHours = (totalMinutes: number): string => {
 }
 
 export const createTimeFromDateAndTime = (date: Date, timeString: string): Date => {
+  if (!timeString) {
+    return setMinutes(setHours(startOfDay(date), 0), 0)
+  }
   const [hours, minutes] = timeString.split(':').map(Number)
   return setMinutes(setHours(startOfDay(date), hours), minutes)
 }

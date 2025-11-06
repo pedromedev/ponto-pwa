@@ -198,11 +198,6 @@ const RetroativoPage = () => {
       return
     }
 
-    if (!formData.clockIn && !formData.lunchStart && !formData.lunchEnd && !formData.clockOut) {
-      toast.error(MESSAGES.ERROR.MISSING_TIME)
-      return
-    }
-
     setIsSubmitting(true)
 
     try {
@@ -218,33 +213,33 @@ const RetroativoPage = () => {
         saldoDoDia: 0.0
       }
 
-      if (formData.clockIn) {
-        timeEntryData.clockIn = createTimeFromDateAndTime(selectedDate, formData.clockIn)
-        if (formData.clockInJustification) {
-          timeEntryData.clockInJustification = formData.clockInJustification
-        }
-      }
 
-      if (formData.lunchStart) {
-        timeEntryData.lunchStart = createTimeFromDateAndTime(selectedDate, formData.lunchStart)
-        if (formData.lunchStartJustification) {
-          timeEntryData.lunchStartJustification = formData.lunchStartJustification
-        }
+      timeEntryData.clockIn = createTimeFromDateAndTime(selectedDate, formData.clockIn)
+      if (formData.clockInJustification) {
+        timeEntryData.clockInJustification = formData.clockInJustification
       }
+    
 
-      if (formData.lunchEnd) {
-        timeEntryData.lunchEnd = createTimeFromDateAndTime(selectedDate, formData.lunchEnd)
-        if (formData.lunchEndJustification) {
-          timeEntryData.lunchEndJustification = formData.lunchEndJustification
-        }
-      }
 
-      if (formData.clockOut) {
-        timeEntryData.clockOut = createTimeFromDateAndTime(selectedDate, formData.clockOut)
-        if (formData.clockOutJustification) {
-          timeEntryData.clockOutJustification = formData.clockOutJustification
-        }
+      timeEntryData.lunchStart = createTimeFromDateAndTime(selectedDate, formData.lunchStart)
+      if (formData.lunchStartJustification) {
+        timeEntryData.lunchStartJustification = formData.lunchStartJustification
       }
+    
+
+
+      timeEntryData.lunchEnd = createTimeFromDateAndTime(selectedDate, formData.lunchEnd)
+      if (formData.lunchEndJustification) {
+        timeEntryData.lunchEndJustification = formData.lunchEndJustification
+      }
+    
+
+
+      timeEntryData.clockOut = createTimeFromDateAndTime(selectedDate, formData.clockOut)
+      if (formData.clockOutJustification) {
+        timeEntryData.clockOutJustification = formData.clockOutJustification
+      }
+      
 
       let response: TimeEntryResponse
       if (entry === undefined) {
