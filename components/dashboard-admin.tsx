@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { TimeEntryResponse, TimeEntryWithUserResponse } from '@/types/time-entry';
 import { formatMinutesToHours } from '@/lib/date-utils';
 import { useTimeEntry } from '@/hooks/use-time-entry'
+import UserDetailsModal from '@/components/user-details-modal'
 
 interface TimesheetRecord {
   date: string;
@@ -221,68 +222,11 @@ const Dashboard: React.FC<TimesheetOverviewProps> = ({ externalStats }) => {
       <TimesheetTable data={employeeData} onSelectEmployee={setSelectedEmployee} />
 
       {selectedEmployee && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-          onClick={() => setSelectedEmployee(null)}
-          role="dialog"
-          aria-label={`Detalhes de ${selectedEmployee.name}`}
-        >
-          <div
-            className="bg-slate-700 rounded-lg border border-slate-600 p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h4 className="text-lg font-semibold text-white mb-4">Registros de {selectedEmployee.name}</h4>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-slate-750 border-b border-slate-700">
-                    <TableHead className="text-slate-300">Data</TableHead>
-                    <TableHead className="text-slate-300">Entrada</TableHead>
-                    <TableHead className="text-slate-300">Saída Almoço</TableHead>
-                    <TableHead className="text-slate-300">Volta Almoço</TableHead>
-                    <TableHead className="text-slate-300">Saída</TableHead>
-                    <TableHead className="text-slate-300">Horas Trabalhadas</TableHead>
-                    <TableHead className="text-slate-300">Saldo do Dia</TableHead>
-                    <TableHead className="text-slate-300">Observações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {selectedEmployee.records.length > 0 ? (
-                    selectedEmployee.records.map((record: TimesheetRecord, index: number) => (
-                      <TableRow key={index} className="hover:bg-slate-750 transition-colors border-b border-slate-700">
-                        <TableCell className="font-medium text-white">{record.date}</TableCell>
-                        <TableCell className="text-slate-300">{record.entry}</TableCell>
-                        <TableCell className="text-slate-300">{record.lunchOut}</TableCell>
-                        <TableCell className="text-slate-300">{record.lunchIn}</TableCell>
-                        <TableCell className="text-slate-300">{record.exit}</TableCell>
-                        <TableCell className="text-white font-medium">{record.totalHours}</TableCell>
-                        <TableCell>
-                          <span className={record.balance.includes('-') ? 'text-red-400' : 'text-green-400'}>
-                            {record.balance}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-sm text-slate-400">{record.obs}</TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center text-slate-400">
-                        Nenhum registro encontrado
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-            <Button
-              onClick={() => setSelectedEmployee(null)}
-              variant="outline"
-              className="mt-4 bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
-            >
-              Fechar
-            </Button>
-          </div>
-        </div>
+        <UserDetailsModal
+          users={employeeData.map(u => ({ id: u.id, name: u.name }))}
+          initialUserId={selectedEmployee.id}
+          onClose={() => setSelectedEmployee(null)}
+        />
       )}
     </div>
   );

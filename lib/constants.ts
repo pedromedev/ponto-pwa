@@ -48,6 +48,9 @@ export const API_ROUTES = {
     ORGANIZATION_MONTHLY: (organizationId: number = DEFAULT_ORGANIZATION_ID) => `/reports/organization/${organizationId}/monthly`,
     TEST_MONTHLY: '/reports/test/monthly'
   },
+  USER: {
+    BY_ID: (id: number) => `/user/${id}`,
+  },
   MANAGEMENT: {
     STATS: '/management/stats',
     INVITATIONS: '/management/invitations',
