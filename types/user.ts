@@ -3,6 +3,8 @@ export interface User {
   email: string
   name: string
   role: 'MANAGER' | 'MEMBER'
+  status: 'ACTIVE' | 'INACTIVE'
+  bancoDeHoras: number
 }
 
 export interface LoginCredentials {

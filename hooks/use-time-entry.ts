@@ -32,6 +32,7 @@ export const useTimeEntry = () => {
   const { user, isLoading: isAuthLoading } = useAuth()
   const [month, setMonth ] = useState<number>(new Date().getMonth() + 1)
   const [fields, setFields] = useState<TimeEntryFields>(INITIAL_FIELDS_STATE)
+  const [year] = useState<number>(new Date().getFullYear())
   const [justificationTypes, setJustificationTypes] = useState<JustificationType[]>([])
   const [isSubmitting, setIsSubmitting] = useState<Record<FieldName, boolean>>({
     clockIn: false,
@@ -265,7 +266,8 @@ export const useTimeEntry = () => {
 
     try {
       setIsLoadingEntries(true)
-      const entries = await api.get<TimeEntryResponse[]>(API_ROUTES.TIME_ENTRY.BY_MONTH(user.id, month), true)
+      let mStr = month < 10 ? `0${month}` : month.toString()
+      const entries = await api.get<TimeEntryResponse[]>(API_ROUTES.TIME_ENTRY.BY_COMPETENCE(user.id, `${mStr}${year}`), true)
       setTimeEntries(entries)
       getMarkersForEntries()
     } catch (error: any) {

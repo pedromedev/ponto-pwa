@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth'
 import { User } from '@/types/user';
-import { API_ROUTES } from '@/lib/constants';
+import { API_ROUTES, getFieldDisplayName } from '@/lib/constants';
 
 interface Justification {
   id: number;
@@ -310,7 +310,7 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
                                 <span className="ml-2">Role: {justification.user.role}</span>
                               </CardDescription>
                               <div className="mt-2 text-sm text-muted-foreground">
-                                Justificativa de {justification.timeType === 'CLOCK_IN' ? 'Entrada' : justification.timeType === 'LUNCH_START' ? 'Início do Almoço' : justification.timeType === 'LUNCH_END' ? 'Fim do Almoço' : 'Saída'}: {justification.justification}
+                                Justificativa de {getFieldDisplayName(justification.timeType)}: {justification.justification}
                               </div>
                             </div>
                             <Tooltip>

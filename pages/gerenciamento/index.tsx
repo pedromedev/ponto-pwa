@@ -26,17 +26,14 @@ import { API_ROUTES, DEFAULT_ORGANIZATION_ID } from '@/lib/constants'
 import { toast } from 'sonner'
 import { 
   Users, 
-  UserPlus, 
-  Mail, 
+  UserPlus,
+  LayoutDashboard,
   Download, 
   Send, 
   Plus, 
   Edit, 
   Trash2, 
-  Eye,
   X,
-  UserCheck,
-  UserX,
   Loader2,
   ListChecks
 } from 'lucide-react'
@@ -348,7 +345,7 @@ const GerenciamentoPage: NextPageWithLayout = () => {
       {/* Navegação por abas */}
       <div className="flex space-x-1 bg-muted rounded-lg p-1">
         {[
-          { key: 'dashboard', label: 'Dashboard', icon: Users },
+          { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
           // { key: 'teams', label: 'Equipes', icon: Users },
           // { key: 'invitations', label: 'Convites', icon: Mail },
           { key: 'justificationTypes', label: 'Justificativas', icon: ListChecks },

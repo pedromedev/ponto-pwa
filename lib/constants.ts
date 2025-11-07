@@ -8,7 +8,7 @@ export const API_ROUTES = {
     USER: (userId: number) => `/time-entry/user/${userId}`,
     CREATE: '/time-entry',
     BY_DATE: (userId: number, date: string) => `/time-entry/by-date/${userId}/${date}`,
-    BY_MONTH: (userId: number, month: number) => `/time-entry/by-month/${userId}/${month}`,
+    BY_COMPETENCE: (userId: number, competence: string) => `/time-entry/by-competence/${userId}/${competence}`,
     BY_ID: (id: number) => `/time-entry/${id}`
   },
   JUSTIFICATIONS: {
@@ -94,7 +94,7 @@ export const MESSAGES = {
   }
 } as const
 
-const getFieldDisplayName = (fieldName: string): string => {
+export const getFieldDisplayName = (fieldName: string): string => {
   const names: Record<string, string> = {
     clockIn: 'Entrada',
     lunchStart: 'Início do almoço',
