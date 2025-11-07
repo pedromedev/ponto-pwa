@@ -239,7 +239,7 @@ const JustificationTypesAdmin: React.FC = () => {
           <div className="relative w-full max-w-md rounded-md border bg-background p-5 shadow-lg">
             <div className="mb-3">
               <h3 className="text-lg font-semibold">Remover tipo</h3>
-              <p className="text-sm text-muted-foreground">Tem certeza que deseja remover "{confirmState.label}"?</p>
+              <p className="text-sm text-muted-foreground">Tem certeza que deseja remover {`"${confirmState.label}"`}?</p>
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setConfirmState({ open: false, id: null, label: '' })} disabled={saving}>Cancelar</Button>
