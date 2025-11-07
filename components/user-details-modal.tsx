@@ -70,7 +70,7 @@ export default function UserDetailsModal({ users, initialUserId, onClose }: Prop
   const loadData = async (uid: number, m: number, y: number) => {
     setLoading(true)
     try {
-      let mStr = month < 10 ? `0${month}` : month.toString()
+      let mStr = m < 10 ? `0${m}` : m.toString()
       const [userInfo, monthEntries] = await Promise.allSettled([
         api.get<User>(API_ROUTES.USER.BY_ID(uid), true),
         api.get<MonthEntry[]>(API_ROUTES.TIME_ENTRY.BY_COMPETENCE(uid, `${mStr}${y}`), true),
@@ -96,7 +96,7 @@ export default function UserDetailsModal({ users, initialUserId, onClose }: Prop
     if (currentUser) {
       loadData(currentUser.id, month, year)
     }
-  }, [currentUser?.id, month, year])
+  }, [currentUser, month, year])
 
   const goPrevUser = () => {
     if (currentIndex > 0) {

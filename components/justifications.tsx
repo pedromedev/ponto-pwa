@@ -163,7 +163,7 @@ const JustificationsAdmin: React.FC<JustificationsAdminProps> = ({ availableUser
     }));
 
     loadJustifications()
-  }, [isAuthLoading, user]);
+  }, []);
 
   // Filtra no front
   useEffect(() => {
